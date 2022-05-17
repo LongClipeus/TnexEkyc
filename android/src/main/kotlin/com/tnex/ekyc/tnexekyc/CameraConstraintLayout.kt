@@ -213,12 +213,12 @@ class CameraConstraintLayout(context: Context,
 
             cameraProvider!!.bindToLifecycle(/* lifecycleOwner= */lifecycleOwner!!, cameraSelector!!, analysisUseCase, videoCapture)
 
-            Timer().schedule(object : TimerTask() {
-                override fun run() {
-                    Log.i("startRecoding", "call startRecoding")
-                    startRecoding()
-                }
-            }, 200)
+//            Timer().schedule(object : TimerTask() {
+//                override fun run() {
+//                    Log.i("startRecoding", "call startRecoding")
+//                    startRecoding()
+//                }
+//            }, 200)
         } catch (e: Exception) {
             Log.i("Camera", "Failed to process image. Error: " + e.localizedMessage)
             sendEkycEvent(DetectionEvent.FAILED, null)
