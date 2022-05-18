@@ -318,8 +318,8 @@ class CameraConstraintLayout(context: Context,
 
 
     private fun sendEkycEvent(event: DetectionEvent, imagesPath: HashMap<String, String>?){
-        //onStopEkyc()
-        //listener.onResults(event, imagesPath, videoPath)
+        onStopEkyc()
+        listener.onResults(event, imagesPath, videoPath)
     }
 
 
