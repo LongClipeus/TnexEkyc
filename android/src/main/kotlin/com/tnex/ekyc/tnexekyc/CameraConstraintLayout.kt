@@ -213,12 +213,12 @@ class CameraConstraintLayout(context: Context,
 
             cameraProvider!!.bindToLifecycle(/* lifecycleOwner= */lifecycleOwner!!, cameraSelector!!, analysisUseCase, videoCapture)
 
-//            Timer().schedule(object : TimerTask() {
-//                override fun run() {
-//                    Log.i("startRecoding", "call startRecoding")
-//                    startRecoding()
-//                }
-//            }, 200)
+            Timer().schedule(object : TimerTask() {
+                override fun run() {
+                    Log.i("startRecoding", "call startRecoding")
+                    startRecoding()
+                }
+            }, 200)
         } catch (e: Exception) {
             Log.i("Camera", "Failed to process image. Error: " + e.localizedMessage)
             sendEkycEvent(DetectionEvent.FAILED, null)
@@ -303,7 +303,7 @@ class CameraConstraintLayout(context: Context,
      * CaptureEvent listener.
      */
     private val captureListener = Consumer<VideoRecordEvent> { event ->
-        Log.i("ekycEvent", "ekycEvent captureListener $event")
+        Log.i("ekycEvent", "ekycEvent captureListener VideoRecordEvent $event")
         recordingState = event
     }
 
@@ -318,8 +318,8 @@ class CameraConstraintLayout(context: Context,
 
 
     private fun sendEkycEvent(event: DetectionEvent, imagesPath: HashMap<String, String>?){
-        onStopEkyc()
-        listener.onResults(event, imagesPath, videoPath)
+        //onStopEkyc()
+        //listener.onResults(event, imagesPath, videoPath)
     }
 
 
