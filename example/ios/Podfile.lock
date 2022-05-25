@@ -59,7 +59,7 @@ PODS:
     - Flutter
   - PromisesObjC (2.1.0)
   - Protobuf (3.20.1)
-  - tnexekyc (0.0.1):
+  - tnexekyc (0.0.2):
     - Flutter
     - GoogleMLKit/FaceDetection (~> 2.6.0)
     - MLKitVision
@@ -109,7 +109,7 @@ SPEC CHECKSUMS:
   permission_handler: ccb20a9fad0ee9b1314a52b70b76b473c5f8dab0
   PromisesObjC: 99b6f43f9e1044bd87a95a60beff28c2c44ddb72
   Protobuf: b60ec2f51ad74765f44d0c09d2e0579d7de21745
-  tnexekyc: 3b7f721a9fb6e87afef5dbb63214dca4d928abf2
+  tnexekyc: 5fb02802b2443465ac7718ab3132325792dc6b88
 
 PODFILE CHECKSUM: 88b97f9867815d9aa81b768b535cdf0b08e94a30
 

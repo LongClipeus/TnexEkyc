@@ -1,8 +1,9 @@
+import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:tnexekyc/capture_camera_view.dart';
 
-import 'package:tnexekyc/ekyc_camera_view.dart';
 import 'package:tnexekyc/tnexekyc.dart';
 
 void main() {
@@ -104,6 +105,21 @@ class _HomeAppState extends State<HomeApp> {
     });
   }
 
+  void captureResults(String imagePath) {
+    debugPrint("ekycEventBIENNT ekycResults Main $imagePath");
+    Tnexekyc.onStopCamera();
+    _showCaptureDialog(imagePath);
+    // var eventType = map['eventType'];
+    // var title = getTitle(eventType);
+    // var mss = getMss(eventType);
+    // _showMyDialog(title, mss);
+  }
+
+  void captureError(String detectType){
+    Tnexekyc.onStopCamera();
+    //_showMyDialog(detectType, "captureError(String detectType)");
+  }
+
   Future<void> _showMyDialog(String title, String mess) async {
     return showDialog<void>(
       context: context,
@@ -132,6 +148,39 @@ class _HomeAppState extends State<HomeApp> {
     );
   }
 
+  Future<void> _showCaptureDialog(String path) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("HIHI"),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Image.file(
+                  File(path),
+                  width: 200,
+                  fit: BoxFit.fitWidth,
+                )
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                Tnexekyc.onStartCamera();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
   List<String> randomListDetectType(){
     List<String> detectType = ["turn_right", "blink_eye", "turn_left", "smile"];
     List<String> listType =[];
@@ -154,7 +203,7 @@ class _HomeAppState extends State<HomeApp> {
   Widget build(BuildContext context) {
     double width = MediaQuery.of(context).size.width;
     double height = MediaQuery.of(context).size.height;
-    double hCamera = width;
+    double hCamera = 2*width/3;
 
 
     return Scaffold(
@@ -162,34 +211,63 @@ class _HomeAppState extends State<HomeApp> {
         title: const Text('Plugin example app'),
       ),
       body: Column(children: [
-        SizedBox(
-          width: width,
-          height: 100,
-          child: Row(children: [
-            const Spacer(flex: 1,),
-            Text(detectType[0], style: TextStyle(color: selectType == detectType[0] ? const Color(
-                0xff00d178) : const Color(0xff000000)),),
-            const Spacer(flex: 1,),
-            Text(detectType[1], style: TextStyle(color: selectType == detectType[1] ? const Color(
-                0xff00d178) : const Color(0xff000000)),),
-            const Spacer(flex: 1,),
-            Text(detectType[2], style: TextStyle(color: selectType == detectType[2] ? const Color(
-                0xff00d178) : const Color(0xff000000)),),
-            const Spacer(flex: 1,),
-            Text(detectType[3], style: TextStyle(color: selectType == detectType[3] ? const Color(
-                0xff00d178) : const Color(0xff000000)),),
-            const Spacer(flex: 1,),
-          ],
-            mainAxisAlignment: MainAxisAlignment.center,
-          ),),
         Container(
+          margin: const EdgeInsets.only(left: 30.0, right: 30.0, bottom: 30.0, top: 60.0),
           color: const Color(0xff000000),
-          height: height,
-          width: width,
-          child: detectType.isEmpty ? null : CameraView(hCamera.round(), width.round(), detectType, ekycResults, ekycStartDetectType),
+          height: hCamera,
+          width: width - 60,
+          child: detectType.isEmpty ? null : CaptureView(hCamera.round(), width.round() - 60, captureResults, captureError),
         ),
-        const Expanded(child: SizedBox())
+        TextButton(
+          child: const Text('Capture'),
+          onPressed: () {
+            Tnexekyc.onCapture();
+          },
+        ),
       ],),
     );
   }
+
+  // @override
+  // Widget build(BuildContext context) {
+  //   double width = MediaQuery.of(context).size.width;
+  //   double height = MediaQuery.of(context).size.height;
+  //   double hCamera = width;
+  //
+  //
+  //   return Scaffold(
+  //     appBar: AppBar(
+  //       title: const Text('Plugin example app'),
+  //     ),
+  //     body: Column(children: [
+  //       SizedBox(
+  //         width: width,
+  //         height: 100,
+  //         child: Row(children: [
+  //           const Spacer(flex: 1,),
+  //           Text(detectType[0], style: TextStyle(color: selectType == detectType[0] ? const Color(
+  //               0xff00d178) : const Color(0xff000000)),),
+  //           const Spacer(flex: 1,),
+  //           Text(detectType[1], style: TextStyle(color: selectType == detectType[1] ? const Color(
+  //               0xff00d178) : const Color(0xff000000)),),
+  //           const Spacer(flex: 1,),
+  //           Text(detectType[2], style: TextStyle(color: selectType == detectType[2] ? const Color(
+  //               0xff00d178) : const Color(0xff000000)),),
+  //           const Spacer(flex: 1,),
+  //           Text(detectType[3], style: TextStyle(color: selectType == detectType[3] ? const Color(
+  //               0xff00d178) : const Color(0xff000000)),),
+  //           const Spacer(flex: 1,),
+  //         ],
+  //           mainAxisAlignment: MainAxisAlignment.center,
+  //         ),),
+  //       Container(
+  //         color: const Color(0xff000000),
+  //         height: height,
+  //         width: width,
+  //         child: detectType.isEmpty ? null : CameraView(hCamera.round(), width.round(), detectType, ekycResults, ekycStartDetectType),
+  //       ),
+  //       const Expanded(child: SizedBox())
+  //     ],),
+  //   );
+  // }
 }

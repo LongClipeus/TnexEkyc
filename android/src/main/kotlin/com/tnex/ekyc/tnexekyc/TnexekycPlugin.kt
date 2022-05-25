@@ -1,6 +1,5 @@
 package com.tnex.ekyc.tnexekyc
 
-import android.text.TextUtils
 import android.util.Log
 import androidx.annotation.NonNull
 
@@ -15,24 +14,30 @@ import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
 
 /** TnexekycPlugin */
-class TnexekycPlugin: FlutterPlugin, MethodCallHandler, ActivityAware, EkycListener, EventChannel.StreamHandler {
+class TnexekycPlugin: FlutterPlugin, MethodCallHandler, ActivityAware, EkycListener, CaptureListener,EventChannel.StreamHandler {
   /// The MethodChannel that will the communication between Flutter and native Android
   ///
   /// This local reference serves to register the plugin with the Flutter Engine and unregister it
   /// when the Flutter Engine is detached from the Activity
   private lateinit var channel : MethodChannel
-  private lateinit var eventChannel: EventChannel
+  private lateinit var eventEkycChannel: EventChannel
+  private lateinit var eventCaptureChannel: EventChannel
   private lateinit var flutterPluginBinding : FlutterPlugin.FlutterPluginBinding
   private var cameraFactory : CameraFactory? = null
   private var eventSink: EventSink? = null
+
+  private var captureFactory : CaptureFactory? = null
 
   override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
     this.flutterPluginBinding = flutterPluginBinding
 
     channel = MethodChannel(flutterPluginBinding.binaryMessenger, "tnexekyc")
     channel.setMethodCallHandler(this)
-    eventChannel = EventChannel(flutterPluginBinding.binaryMessenger, "tnex_ekyc_listener")
-    eventChannel.setStreamHandler(this)
+    eventEkycChannel = EventChannel(flutterPluginBinding.binaryMessenger, "tnex_ekyc_listener")
+    eventEkycChannel.setStreamHandler(this)
+
+    eventCaptureChannel = EventChannel(flutterPluginBinding.binaryMessenger, "tnex_capture_listener")
+    eventCaptureChannel.setStreamHandler(this)
   }
 
   override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
@@ -40,6 +45,12 @@ class TnexekycPlugin: FlutterPlugin, MethodCallHandler, ActivityAware, EkycListe
       cameraFactory?.onStartEkyc()
     } else if (call.method == "onStopEkyc") {
       cameraFactory?.onStopEkyc()
+    } else if (call.method == "onCapture") {
+      captureFactory?.onCaptureImage()
+    } else if (call.method == "onStartCamera") {
+      captureFactory?.onStartCamera()
+    } else if (call.method == "onStopCamera") {
+      captureFactory?.onStopCamera()
     } else {
       result.notImplemented()
     }
@@ -56,18 +67,26 @@ class TnexekycPlugin: FlutterPlugin, MethodCallHandler, ActivityAware, EkycListe
         .platformViewRegistry
         .registerViewFactory("plugins.tnex.ekyc/camera", cameraFactory)
     }
+
+    captureFactory?.onStartCamera() ?: run {
+      captureFactory = CaptureFactory(binding.activity, this@TnexekycPlugin)
+      flutterPluginBinding.platformViewRegistry.registerViewFactory("plugins.tnex.capture/camera", captureFactory)
+    }
   }
 
   override fun onDetachedFromActivityForConfigChanges() {
     cameraFactory?.onStopEkyc()
+    captureFactory?.onStopCamera()
   }
 
   override fun onReattachedToActivityForConfigChanges(binding: ActivityPluginBinding) {
     cameraFactory?.onStartEkyc()
+    captureFactory?.onStartCamera()
   }
 
   override fun onDetachedFromActivity() {
     cameraFactory?.onStopEkyc()
+    captureFactory?.onStopCamera()
   }
 
   override fun onListen(arguments: Any?, events: EventSink?) {
@@ -122,6 +141,28 @@ class TnexekycPlugin: FlutterPlugin, MethodCallHandler, ActivityAware, EkycListe
     events["detectionType"] = type
 
     Log.i("TAG", "ekycEvent TnexekycPlugin events $events")
+    eventSink!!.success(events)
+  }
+
+  override fun onResults(imagePath: String) {
+    if (eventSink == null) {
+      return
+    }
+
+    val events: MutableMap<String, String> = HashMap()
+    events["imagePath"] = imagePath
+    events["eventType"] = "SUCCESS"
+    eventSink!!.success(events)
+  }
+
+  override fun onError(type: String) {
+    if (eventSink == null) {
+      return
+    }
+
+    val events: MutableMap<String, String> = HashMap()
+    events["errorType"] = type
+    events["eventType"] = "ERROR"
     eventSink!!.success(events)
   }
 }

@@ -8,10 +8,10 @@
 import Flutter
 import UIKit
 
-class FLNativeViewFactory: NSObject, FlutterPlatformViewFactory, FlutterStreamHandler {
+class EkycViewFactory: NSObject, FlutterPlatformViewFactory, FlutterStreamHandler {
     private var messenger: FlutterBinaryMessenger
     private var eventSink: FlutterEventSink?
-    private var nativeView: FLNativeView?
+    private var nativeView: EkycNativeView?
 
     init(messenger: FlutterBinaryMessenger) {
         self.messenger = messenger
@@ -85,7 +85,7 @@ class FLNativeViewFactory: NSObject, FlutterPlatformViewFactory, FlutterStreamHa
         viewIdentifier viewId: Int64,
         arguments args: Any?
     ) -> FlutterPlatformView {
-        nativeView =  FLNativeView(
+        nativeView =  EkycNativeView(
             frame: frame,
             viewIdentifier: viewId,
             arguments: args,
@@ -102,7 +102,7 @@ class FLNativeViewFactory: NSObject, FlutterPlatformViewFactory, FlutterStreamHa
     }
 }
 
-class FLNativeView: NSObject, FlutterPlatformView {
+class EkycNativeView: NSObject, FlutterPlatformView {
     
     private var _view: UIView
     private var cameraView: EkycView?

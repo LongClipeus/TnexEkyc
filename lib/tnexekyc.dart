@@ -13,4 +13,16 @@ class Tnexekyc {
   static onStopEkyc(){
     _channel.invokeMethod('onStopEkyc');
   }
+
+  static onStartCamera(){
+    _channel.invokeMethod('onStartCamera');
+  }
+
+  static onStopCamera(){
+    _channel.invokeMethod('onStopCamera');
+  }
+
+  static onCapture(){
+    _channel.invokeMethod('onCapture');
+  }
 }

@@ -122,6 +122,64 @@ public class UIConstants {
     }
     
     public static func createUIImage(
+        from uiImage: UIImage,
+        width: CGFloat,
+        height: CGFloat
+    ) -> UIImage? {
+        //let context = CIContext(options: nil)
+        //guard let ciImage = CIImage(data: imageData) else { return nil }
+        
+        let w = uiImage.size.width
+        let h = uiImage.size.height
+        
+        var newW = w
+        var newH = (height/width)*w
+        var x = 0.0
+        var y = 0.0
+        
+        if(newH > h){
+            newH = h
+            newW = (width/height)*h + 20
+            x = CGFloat((newW - width) / 2) + newH - newW
+        }else{
+            newH += 20
+            y = CGFloat((newH - height) / 2) + newW - newH
+        }
+        
+        print("BienNTCamera height = \(height) width = \(width)")
+        print("BienNTCamera x = \(x) y = \(y)")
+        print("BienNTCamera newW = \(newW) newH = \(newH)")
+        print("BienNTCamera w = \(w) h = \(h)")
+        
+        let cropRect = CGRect(
+            x: y,
+            y: x,
+            width: newH,
+            height: newW
+        ).integral
+
+        guard let sourceCGImage = uiImage.cgImage else { return nil }
+        
+        guard let croppedCGImage = sourceCGImage.cropping(
+            to: cropRect
+        ) else { return nil }
+        
+        print("BienNTCamera image.width = \(croppedCGImage.width) image.height = \(croppedCGImage.height)")
+        
+        let croppedImage = UIImage(
+            cgImage: croppedCGImage,
+            scale: uiImage.imageRendererFormat.scale,
+            orientation: uiImage.imageOrientation
+        )
+        
+        print("BienNTCamera scale = \(uiImage.imageRendererFormat.scale) orientation = \(uiImage.imageOrientation.rawValue)")
+        
+        print("BienNTCamera image.width = \(croppedImage.size.width) image.height = \(croppedImage.size.height)")
+        
+        return croppedImage
+    }
+    
+    public static func createUIImage(
         from imageBuffer: CVImageBuffer,
         orientation: UIImage.Orientation
     ) -> UIImage? {

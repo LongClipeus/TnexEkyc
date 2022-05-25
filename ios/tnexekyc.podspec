@@ -4,7 +4,7 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'tnexekyc'
-  s.version          = '0.0.1'
+  s.version          = '0.0.2'
   s.summary          = 'A new flutter plugin project.'
   s.description      = <<-DESC
 A new flutter plugin project.
@@ -18,7 +18,7 @@ A new flutter plugin project.
   s.dependency 'MLKitVision'
   s.dependency 'GoogleMLKit/FaceDetection', '~> 2.6.0'
   s.static_framework = true
-  s.platform = :ios, '10.0'
+  s.platform = :ios, '11.0'
 
 
   # Flutter.framework does not contain a i386 slice.
