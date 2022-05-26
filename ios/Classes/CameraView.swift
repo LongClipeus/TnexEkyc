@@ -28,7 +28,6 @@ class CameraView: UIView, AVCapturePhotoCaptureDelegate {
     override func willMove(toSuperview newSuperview: UIView?) {
         super.willMove(toSuperview: newSuperview)
         print("BienNT willMoveToSuperview")
-        setupCaptureSession()
     }
     
     override func layoutSubviews() {
@@ -40,27 +39,40 @@ class CameraView: UIView, AVCapturePhotoCaptureDelegate {
     
     
     private func setupCaptureSession() {
-           if let captureDevice = AVCaptureDevice.default(for: AVMediaType.video) {
-               do {
-                   let input = try AVCaptureDeviceInput(device: captureDevice)
-                   if captureSession.canAddInput(input) {
-                       captureSession.addInput(input)
-                   }
-               } catch let error {
-                   print("Failed to set input device with error: \(error)")
-                   sendError()
+        
+        self.layer.sublayers?.forEach { $0.removeFromSuperlayer() }
+        
+        for input in captureSession.inputs {
+            captureSession.removeInput(input);
+        }
+        for optput in captureSession.outputs {
+            captureSession.removeOutput(optput);
+        }
+        
+        
+        if let captureDevice = AVCaptureDevice.default(for: AVMediaType.video) {
+           do {
+               let input = try AVCaptureDeviceInput(device: captureDevice)
+               if captureSession.canAddInput(input) {
+                   captureSession.addInput(input)
                }
-               
-               if captureSession.canAddOutput(photoOutput) {
-                   captureSession.addOutput(photoOutput)
-               }
-               
-               let cameraLayer = AVCaptureVideoPreviewLayer(session: captureSession)
-               cameraLayer.frame = self.frame
-               cameraLayer.videoGravity = .resizeAspectFill
-               self.layer.addSublayer(cameraLayer)
-               self.clipsToBounds = true
+           } catch let error {
+               print("Failed to set input device with error: \(error)")
+               sendError()
            }
+           
+           if captureSession.canAddOutput(photoOutput) {
+               captureSession.addOutput(photoOutput)
+           }
+           
+           let cameraLayer = AVCaptureVideoPreviewLayer(session: captureSession)
+           cameraLayer.frame = self.frame
+           cameraLayer.videoGravity = .resizeAspectFill
+           self.layer.addSublayer(cameraLayer)
+           self.clipsToBounds = true
+       }else{
+           sendError()
+       }
     }
     
     private func savePhotoToDocuments(imageData: UIImage) -> String? {
@@ -129,6 +141,7 @@ class CameraView: UIView, AVCapturePhotoCaptureDelegate {
     }
     
     func startCamera(){
+        setupCaptureSession()
         captureSession.startRunning()
     }
 

@@ -126,9 +126,6 @@ public class UIConstants {
         width: CGFloat,
         height: CGFloat
     ) -> UIImage? {
-        //let context = CIContext(options: nil)
-        //guard let ciImage = CIImage(data: imageData) else { return nil }
-        
         let w = uiImage.size.width
         let h = uiImage.size.height
         
@@ -146,11 +143,6 @@ public class UIConstants {
             y = CGFloat((newH - height) / 2) + newW - newH
         }
         
-        print("BienNTCamera height = \(height) width = \(width)")
-        print("BienNTCamera x = \(x) y = \(y)")
-        print("BienNTCamera newW = \(newW) newH = \(newH)")
-        print("BienNTCamera w = \(w) h = \(h)")
-        
         let cropRect = CGRect(
             x: y,
             y: x,
@@ -164,17 +156,12 @@ public class UIConstants {
             to: cropRect
         ) else { return nil }
         
-        print("BienNTCamera image.width = \(croppedCGImage.width) image.height = \(croppedCGImage.height)")
         
         let croppedImage = UIImage(
             cgImage: croppedCGImage,
             scale: uiImage.imageRendererFormat.scale,
             orientation: uiImage.imageOrientation
         )
-        
-        print("BienNTCamera scale = \(uiImage.imageRendererFormat.scale) orientation = \(uiImage.imageOrientation.rawValue)")
-        
-        print("BienNTCamera image.width = \(croppedImage.size.width) image.height = \(croppedImage.size.height)")
         
         return croppedImage
     }

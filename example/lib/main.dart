@@ -205,7 +205,6 @@ class _HomeAppState extends State<HomeApp> {
     double height = MediaQuery.of(context).size.height;
     double hCamera = 2*width/3;
 
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Plugin example app'),
