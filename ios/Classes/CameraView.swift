@@ -58,7 +58,7 @@ class CameraView: UIView, AVCapturePhotoCaptureDelegate {
                }
            } catch let error {
                print("Failed to set input device with error: \(error)")
-               sendError()
+               sendError("FAILED")
            }
            
            if captureSession.canAddOutput(photoOutput) {
@@ -71,7 +71,7 @@ class CameraView: UIView, AVCapturePhotoCaptureDelegate {
            self.layer.addSublayer(cameraLayer)
            self.clipsToBounds = true
        }else{
-           sendError()
+           sendError("FAILED")
        }
     }
     
@@ -98,17 +98,17 @@ class CameraView: UIView, AVCapturePhotoCaptureDelegate {
     func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?) {
         print("BienNT photoOutput")
         guard let imageData = photo.fileDataRepresentation() else {
-            sendError()
+            sendError("IMAGE_FAILED")
             return
         }
         
         guard let previewImage = UIImage(data: imageData) else {
-            sendError()
+            sendError("IMAGE_FAILED")
             return
         }
                 
         guard let saveImage = UIConstants.createUIImage(from: previewImage, width: self.frame.width, height: self.frame.height) else {
-            sendError()
+            sendError("IMAGE_FAILED")
             return
         }
         
@@ -116,14 +116,14 @@ class CameraView: UIView, AVCapturePhotoCaptureDelegate {
         if let imagePath = path, !imagePath.isEmpty {
             sendResults(imagePath: imagePath)
         }else{
-            sendError()
+            sendError("IMAGE_FAILED")
         }
     }
     
-    private func sendError(){
+    private func sendError(_ errorType: String){
         if let mCallback = self.onError {
             stopCamera()
-            mCallback("FAILED")
+            mCallback(errorType)
         }
     }
 

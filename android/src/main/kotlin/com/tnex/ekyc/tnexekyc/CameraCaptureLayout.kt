@@ -73,8 +73,8 @@ class CameraCaptureLayout(context: Context,
         initCamera()
     }
 
-    private fun sendError(){
-        listener.onError("FAILED")
+    private fun sendError(errorType: String){
+        listener.onError(errorType)
     }
 
     private fun sendResults(imagePath: String){
@@ -99,14 +99,14 @@ class CameraCaptureLayout(context: Context,
 
     private fun bindAllCameraUseCases() {
         if (cameraProvider == null) {
-            sendError()
+            sendError("FAILED")
             return
         }
 
         cameraProvider!!.unbindAll()
         lifecycleOwner = activity.getLifecycleOwner()
         if(lifecycleOwner == null){
-            sendError()
+            sendError("FAILED")
             return
         }
 
@@ -127,7 +127,7 @@ class CameraCaptureLayout(context: Context,
                 lifecycleOwner!!, cameraSelector, preview, imageCapture)
 
         } catch (exc: Exception) {
-            sendError()
+            sendError("FAILED")
         }
     }
 
@@ -157,13 +157,13 @@ class CameraCaptureLayout(context: Context,
     fun captureImage(){
         val capture = imageCapture
         if(capture == null){
-            sendError()
+            sendError("IMAGE_FAILED")
             return
         }
 
         val file = createFile()
         if(file == null){
-            sendError()
+            sendError("IMAGE_FAILED")
             return
         }
 
@@ -175,19 +175,19 @@ class CameraCaptureLayout(context: Context,
                 object : ImageCapture.OnImageSavedCallback {
                     override fun onError(error: ImageCaptureException)
                     {
-                        sendError()
+                        sendError("IMAGE_FAILED")
                     }
                     override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
 
                         val uri = outputFileResults.savedUri
                         if(uri == null){
-                            sendError()
+                            sendError("IMAGE_FAILED")
                             return
                         }
 
                         val path = uri.path
                         if(path.isNullOrEmpty()){
-                            sendError()
+                            sendError("IMAGE_FAILED")
                             return
                         }
 
@@ -195,7 +195,7 @@ class CameraCaptureLayout(context: Context,
                     }
                 })
         } catch (e: Exception) {
-            sendError()
+            sendError("IMAGE_FAILED")
         }
     }
 
