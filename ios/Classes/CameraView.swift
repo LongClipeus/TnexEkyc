@@ -156,7 +156,7 @@ class CameraView: UIView, AVCapturePhotoCaptureDelegate {
             photoSettings.previewPhotoFormat = [kCVPixelBufferPixelFormatTypeKey as String: photoPreviewType]
             photoOutput.capturePhoto(with: photoSettings, delegate: self)
         }else{
-            sendError()
+            sendError("IMAGE_FAILED")
         }
     }
 }
