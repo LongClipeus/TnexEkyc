@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:tnexekyc/capture_camera_view.dart';
+import 'package:tnexekyc/ekyc_camera_view.dart';
 
 import 'package:tnexekyc/tnexekyc.dart';
 
@@ -199,74 +200,74 @@ class _HomeAppState extends State<HomeApp> {
     return listType;
   }
 
-  @override
-  Widget build(BuildContext context) {
-    double width = MediaQuery.of(context).size.width;
-    double height = MediaQuery.of(context).size.height;
-    double hCamera = 2*width/3;
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Plugin example app'),
-      ),
-      body: Column(children: [
-        Container(
-          margin: const EdgeInsets.only(left: 30.0, right: 30.0, bottom: 30.0, top: 60.0),
-          color: const Color(0xff000000),
-          height: hCamera,
-          width: width - 60,
-          child: detectType.isEmpty ? null : CaptureView(hCamera.round(), width.round() - 60, captureResults, captureError),
-        ),
-        TextButton(
-          child: const Text('Capture'),
-          onPressed: () {
-            Tnexekyc.onCapture();
-          },
-        ),
-      ],),
-    );
-  }
-
   // @override
   // Widget build(BuildContext context) {
   //   double width = MediaQuery.of(context).size.width;
   //   double height = MediaQuery.of(context).size.height;
-  //   double hCamera = width;
-  //
+  //   double hCamera = 2*width/3;
   //
   //   return Scaffold(
   //     appBar: AppBar(
   //       title: const Text('Plugin example app'),
   //     ),
   //     body: Column(children: [
-  //       SizedBox(
-  //         width: width,
-  //         height: 100,
-  //         child: Row(children: [
-  //           const Spacer(flex: 1,),
-  //           Text(detectType[0], style: TextStyle(color: selectType == detectType[0] ? const Color(
-  //               0xff00d178) : const Color(0xff000000)),),
-  //           const Spacer(flex: 1,),
-  //           Text(detectType[1], style: TextStyle(color: selectType == detectType[1] ? const Color(
-  //               0xff00d178) : const Color(0xff000000)),),
-  //           const Spacer(flex: 1,),
-  //           Text(detectType[2], style: TextStyle(color: selectType == detectType[2] ? const Color(
-  //               0xff00d178) : const Color(0xff000000)),),
-  //           const Spacer(flex: 1,),
-  //           Text(detectType[3], style: TextStyle(color: selectType == detectType[3] ? const Color(
-  //               0xff00d178) : const Color(0xff000000)),),
-  //           const Spacer(flex: 1,),
-  //         ],
-  //           mainAxisAlignment: MainAxisAlignment.center,
-  //         ),),
   //       Container(
+  //         margin: const EdgeInsets.only(left: 30.0, right: 30.0, bottom: 30.0, top: 60.0),
   //         color: const Color(0xff000000),
-  //         height: height,
-  //         width: width,
-  //         child: detectType.isEmpty ? null : CameraView(hCamera.round(), width.round(), detectType, ekycResults, ekycStartDetectType),
+  //         height: hCamera,
+  //         width: width - 60,
+  //         child: detectType.isEmpty ? null : CaptureView(hCamera.round(), width.round() - 60, captureResults, captureError),
   //       ),
-  //       const Expanded(child: SizedBox())
+  //       TextButton(
+  //         child: const Text('Capture'),
+  //         onPressed: () {
+  //           Tnexekyc.onCapture();
+  //         },
+  //       ),
   //     ],),
   //   );
   // }
+
+  @override
+  Widget build(BuildContext context) {
+    double width = MediaQuery.of(context).size.width;
+    double height = MediaQuery.of(context).size.height;
+    double hCamera = width;
+
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Plugin example app'),
+      ),
+      body: Column(children: [
+        SizedBox(
+          width: width,
+          height: 100,
+          child: Row(children: [
+            const Spacer(flex: 1,),
+            Text(detectType[0], style: TextStyle(color: selectType == detectType[0] ? const Color(
+                0xff00d178) : const Color(0xff000000)),),
+            const Spacer(flex: 1,),
+            Text(detectType[1], style: TextStyle(color: selectType == detectType[1] ? const Color(
+                0xff00d178) : const Color(0xff000000)),),
+            const Spacer(flex: 1,),
+            Text(detectType[2], style: TextStyle(color: selectType == detectType[2] ? const Color(
+                0xff00d178) : const Color(0xff000000)),),
+            const Spacer(flex: 1,),
+            Text(detectType[3], style: TextStyle(color: selectType == detectType[3] ? const Color(
+                0xff00d178) : const Color(0xff000000)),),
+            const Spacer(flex: 1,),
+          ],
+            mainAxisAlignment: MainAxisAlignment.center,
+          ),),
+        Container(
+          color: const Color(0xff000000),
+          height: height,
+          width: width,
+          child: detectType.isEmpty ? null : CameraView(hCamera.round(), width.round(), detectType, ekycResults, ekycStartDetectType),
+        ),
+        const Expanded(child: SizedBox())
+      ],),
+    );
+  }
 }

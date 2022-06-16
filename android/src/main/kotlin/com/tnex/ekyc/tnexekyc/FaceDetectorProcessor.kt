@@ -94,6 +94,7 @@ class FaceDetectorProcessor(context: Context, detectorOptions: FaceDetectorOptio
 
   private var runnableTimeout: Runnable = Runnable {
     Log.i(TAG, "ekycEvent runnableTimeout")
+    clearDetectData()
     if(isStart){
       listener.onResults(DetectionEvent.LOST_FACE, null)
     }else{
@@ -102,6 +103,7 @@ class FaceDetectorProcessor(context: Context, detectorOptions: FaceDetectorOptio
   }
 
   init {
+    isStart = false
     imageData.clear()
     val options = detectorOptions
       ?: FaceDetectorOptions.Builder()
@@ -144,58 +146,117 @@ class FaceDetectorProcessor(context: Context, detectorOptions: FaceDetectorOptio
       //todo no face
       Log.i(TAG, "ekycEvent no face")
     }else if (results.size > 1){
-      listener.onResults(DetectionEvent.MULTIPLE_FACE, null)
-      Log.i(TAG, "ekycEvent multiple face")
-      for (face in results) {
-        graphicOverlay.add(FaceGraphic(graphicOverlay, face))
+      val isMultiple = checkMultipleFace(results)
+      if(isMultiple){
+        onMultipleFace(results, graphicOverlay)
+      }else{
+        val face = getFace(results)
+        if(face == null){
+          onMultipleFace(results, graphicOverlay)
+        }else{
+          onFace(face, graphicOverlay, originalCameraImage)
+        }
       }
     }else{
-      if(!isStart){
-        isStart = true
+      val face = results[0]
+      onFace(face, graphicOverlay, originalCameraImage)
+    }
+  }
+
+  private fun clearDetectData(){
+    mHandler.removeCallbacks(runnableTimeout)
+    isPauseDetect = true
+    isStart = false
+    imageData.clear()
+    isPauseDetect = true
+    listDataDetect.clear()
+  }
+
+  private fun onFace(face:Face, graphicOverlay: GraphicOverlay, originalCameraImage: Bitmap?){
+    if(!isStart){
+      isStart = true
+    }
+
+    val headEulerAngleY  = face.headEulerAngleY
+    if(headEulerAngleY < 16 && headEulerAngleY > -16){
+      face.smilingProbability?.let { listSmiling.add(it) }
+    }
+
+    graphicOverlay.add(FaceGraphic(graphicOverlay, face))
+
+    listDataDetect = addDataDetectionType(face, listDataDetect, currDetectionType)
+    val isDetectionType = validateDetectionType()
+    if(isDetectionType){
+      val saveImagePath = bitmapToFile(originalCameraImage, context = mContext, fileName =  currDetectionType.type+"_"+System.currentTimeMillis().toString()+".jpg")
+      if(saveImagePath != null){
+        val key = currDetectionType.type
+        imageData[key] = saveImagePath
       }
 
-      for (face in results) {
-        val headEulerAngleY  = face.headEulerAngleY
-        if(headEulerAngleY < 16 && headEulerAngleY > -16){
-          face.smilingProbability?.let { listSmiling.add(it) }
-        }
+      if(currIndexDetectionType < listDetectionType.size - 1){
+        isPauseDetect = true
+        listDataDetect.clear()
+        currIndexDetectionType += 1
+        currDetectionType=listDetectionType[currIndexDetectionType]
+        listener.onStartDetectionType(currDetectionType.type)
+        mHandler.removeCallbacks(runnableTimeout)
+        mHandler.postDelayed(runnableTimeout, timeoutDetectionTime)
+        delayDetect()
+      }else{
+        listDataDetect.clear()
+        mHandler.removeCallbacks(runnableTimeout)
+        isPauseDetect = true
 
-        graphicOverlay.add(FaceGraphic(graphicOverlay, face))
-
-        listDataDetect = addDataDetectionType(face, listDataDetect, currDetectionType)
-        val isDetectionType = validateDetectionType()
-        if(isDetectionType){
-          val saveImagePath = bitmapToFile(originalCameraImage, context = mContext, fileName =  currDetectionType.type+"_"+System.currentTimeMillis().toString()+".jpg")
-          if(saveImagePath != null){
-            val key = currDetectionType.type
-            imageData[key] = saveImagePath
-          }
-
-          if(currIndexDetectionType < listDetectionType.size - 1){
-            isPauseDetect = true
-            listDataDetect.clear()
-            currIndexDetectionType += 1
-            currDetectionType=listDetectionType[currIndexDetectionType]
-            listener.onStartDetectionType(currDetectionType.type)
-            mHandler.removeCallbacks(runnableTimeout)
-            mHandler.postDelayed(runnableTimeout, timeoutDetectionTime)
-            delayDetect()
-          }else{
-            listDataDetect.clear()
-            mHandler.removeCallbacks(runnableTimeout)
-            isPauseDetect = true
-
-            val smiling = getAmplitude(listSmiling)
-            Log.i("SUCCESS", "CHECK_FACE check listSmiling = $listSmiling")
-            if(smiling <= 0.4f){
-              listener.onResults(DetectionEvent.LOST_FACE, null)
-            }else{
-              listener.onResults(DetectionEvent.SUCCESS, imageData)
-            }
-          }
+        val smiling = getAmplitude(listSmiling)
+        Log.i("SUCCESS", "CHECK_FACE check listSmiling = $listSmiling")
+        if(smiling <= 0.2f){
+          clearDetectData()
+          listener.onResults(DetectionEvent.LOST_FACE, null)
+        }else{
+          listener.onResults(DetectionEvent.SUCCESS, imageData)
         }
       }
     }
+  }
+
+  private fun onMultipleFace(faces: List<Face>, graphicOverlay: GraphicOverlay){
+    clearDetectData()
+    listener.onResults(DetectionEvent.MULTIPLE_FACE, null)
+    Log.i(TAG, "ekycEvent multiple face")
+    for (face in faces) {
+      Log.i("ekycEventMultipleFace", "trackingId = " + face.trackingId)
+      if(face.trackingId != null){
+        graphicOverlay.add(FaceGraphic(graphicOverlay, face))
+      }
+    }
+  }
+
+  private fun checkMultipleFace(faces: List<Face>): Boolean{
+    var totalFace = 0
+    for (face in faces) {
+      if(face.trackingId != null){
+        totalFace ++
+        if(totalFace > 1){
+          return true
+        }
+      }
+    }
+
+    if(totalFace == 0){
+      return true
+    }
+
+    return false
+  }
+
+  private fun getFace(faces: List<Face>): Face?{
+    for (face in faces) {
+      if(face.trackingId != null){
+        return face
+      }
+    }
+
+    return null
   }
 
   private fun validateDetectionType(): Boolean{
@@ -243,6 +304,7 @@ class FaceDetectorProcessor(context: Context, detectorOptions: FaceDetectorOptio
   }
 
   override fun onFailure(e: Exception) {
+    clearDetectData()
     listener.onResults(DetectionEvent.FAILED, null)
     Log.i(TAG, "Face detection failed $e")
   }

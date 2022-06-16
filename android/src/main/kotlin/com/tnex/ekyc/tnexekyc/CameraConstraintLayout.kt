@@ -149,6 +149,9 @@ class CameraConstraintLayout(context: Context,
         if (imageProcessor != null) {
             imageProcessor!!.stop()
         }
+
+        analysisUseCase?.clearAnalyzer()
+
         imageProcessor =
             try {
                 val faceDetectorOptions = PreferenceUtils.getFaceDetectorOptions(context)
@@ -167,7 +170,7 @@ class CameraConstraintLayout(context: Context,
 
 
         try {
-            val quality = Quality.HD;
+            val quality = Quality.HD
             val qualitySelector = QualitySelector.from(quality)
             val builder = ImageAnalysis.Builder()
             val targetResolution = PreferenceUtils.getCameraXTargetResolution(context, lensFacing)
@@ -212,13 +215,14 @@ class CameraConstraintLayout(context: Context,
             videoCapture = VideoCapture.withOutput(recorder)
 
             cameraProvider!!.bindToLifecycle(/* lifecycleOwner= */lifecycleOwner!!, cameraSelector!!, analysisUseCase, videoCapture)
-
-            Timer().schedule(object : TimerTask() {
-                override fun run() {
-                    Log.i("startRecoding", "call startRecoding")
-                    startRecoding()
-                }
-            }, 200)
+            Log.i("startRecoding", "call startRecoding")
+            startRecoding()
+//            Timer().schedule(object : TimerTask() {
+//                override fun run() {
+//                    Log.i("startRecoding", "call startRecoding")
+//                    startRecoding()
+//                }
+//            }, 10)
         } catch (e: Exception) {
             Log.i("Camera", "Failed to process image. Error: " + e.localizedMessage)
             sendEkycEvent(DetectionEvent.FAILED, null)
@@ -328,7 +332,10 @@ class CameraConstraintLayout(context: Context,
     }
 
     fun onStopEkyc() {
+
         stopRecoding()
+
+        analysisUseCase?.clearAnalyzer()
 
         if(imageProcessor != null){
             imageProcessor?.run { this.stop() }
