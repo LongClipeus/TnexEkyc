@@ -43,7 +43,7 @@ class EkycView: UIView {
     fileprivate var sessionAtSourceTime: CMTime?
     
     private lazy var previewOverlayView: UIImageView = {
-        precondition(true)
+        //precondition(true)
         let previewOverlayView = UIImageView(frame: .zero)
         previewOverlayView.contentMode = UIView.ContentMode.scaleAspectFill
         previewOverlayView.translatesAutoresizingMaskIntoConstraints = false
@@ -51,85 +51,11 @@ class EkycView: UIView {
     }()
     
     private lazy var annotationOverlayView: UIView = {
-        precondition(true)
+        //precondition(true)
         let annotationOverlayView = UIView(frame: .infinite)
         annotationOverlayView.translatesAutoresizingMaskIntoConstraints = false
         return annotationOverlayView
     }()
-    
-    private lazy var startRecordVideoButton: UIButton = {
-        let button = UIButton(frame: .zero)
-        button.backgroundColor = .blue
-        button.setTitle("Start record", for: .normal)
-        button.addTarget(self, action: #selector(startRecordVideoAction), for: .touchUpInside)
-        button.translatesAutoresizingMaskIntoConstraints = false
-        return button
-    }()
-    
-    private lazy var stopRecordVideoButton: UIButton = {
-        let button = UIButton(frame: .zero)
-        button.backgroundColor = .blue
-        button.setTitle("Stop record", for: .normal)
-        button.addTarget(self, action: #selector(stopRecordVideoAction), for: .touchUpInside)
-        button.translatesAutoresizingMaskIntoConstraints = false
-        return button
-    }()
-    
-    @objc private func startRecordVideoAction(sender: UIButton) {
-        startRecordVideo()
-    }
-    
-    @objc private func stopRecordVideoAction(sender: UIButton) {
-        stopRecordVideo()
-        playVideo()
-    }
-    
-    private lazy var takePhotoButton: UIButton = {
-        let button = UIButton(frame: .zero)
-        button.backgroundColor = .blue
-        button.setTitle("Take photo", for: .normal)
-        button.addTarget(self, action: #selector(takePhotoAction), for: .touchUpInside)
-        button.translatesAutoresizingMaskIntoConstraints = false
-        return button
-    }()
-    
-    @objc private func takePhotoAction(sender: UIButton) {
-        //takePhoto(mediaType: .photoSmile)
-        showPhoto(mediaType: .photoTurnLeft)
-    }
-    
-    private func setupStartRecordVideoButton() {
-        addSubview(startRecordVideoButton)
-        NSLayoutConstraint.activate([
-            startRecordVideoButton.widthAnchor.constraint(equalToConstant: 100),
-            startRecordVideoButton.heightAnchor.constraint(equalToConstant: 40),
-            startRecordVideoButton.topAnchor.constraint(equalTo: topAnchor, constant: 10),
-            startRecordVideoButton.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 10),
-            
-        ])
-    }
-    
-    private func setupStopRecordVideoButton() {
-        addSubview(stopRecordVideoButton)
-        NSLayoutConstraint.activate([
-            stopRecordVideoButton.widthAnchor.constraint(equalToConstant: 100),
-            stopRecordVideoButton.heightAnchor.constraint(equalToConstant: 40),
-            stopRecordVideoButton.topAnchor.constraint(equalTo: topAnchor, constant: 10),
-            stopRecordVideoButton.leadingAnchor.constraint(equalTo: startRecordVideoButton.trailingAnchor, constant: 10),
-            
-        ])
-    }
-    
-    private func setupTakePhotoButton() {
-        addSubview(takePhotoButton)
-        NSLayoutConstraint.activate([
-            takePhotoButton.widthAnchor.constraint(equalToConstant: 100),
-            takePhotoButton.heightAnchor.constraint(equalToConstant: 40),
-            takePhotoButton.topAnchor.constraint(equalTo: topAnchor, constant: 10),
-            takePhotoButton.leadingAnchor.constraint(equalTo: stopRecordVideoButton.trailingAnchor, constant: 10),
-            
-        ])
-    }
     
     override func awakeFromNib() {
         super.awakeFromNib()
@@ -156,16 +82,10 @@ class EkycView: UIView {
         setUpAnnotationOverlayView()
         setUpCaptureSessionOutput()
         setUpCaptureSessionInput()
-        setupStartRecordVideoButton()
-        setupStopRecordVideoButton()
-        setupTakePhotoButton()
     }
     
     override func layoutSubviews() {
         super.layoutSubviews()
-        print("BienNT layoutSubviews")
-        print("layoutSubviews bounds = \(bounds)")
-        print("layoutSubviews frame = \(frame)")
         //previewLayer.bounds = bounds
     }
     
@@ -220,7 +140,6 @@ class EkycView: UIView {
                     to: strongSelf.annotationOverlayView,
                     color: UIColor.white
                 )
-                //strongSelf.addContours(for: face, width: width, height: height)
             }
         }
     }
@@ -402,160 +321,6 @@ class EkycView: UIView {
         return normalizedPoint
     }
     
-    private func addContours(for face: Face, width: CGFloat, height: CGFloat) {
-        // Face
-        if let faceContour = face.contour(ofType: .face) {
-            for point in faceContour.points {
-                let cgPoint = normalizedPoint(fromVisionPoint: point, width: width, height: height)
-                UIConstants.addCircle(
-                    atPoint: cgPoint,
-                    to: annotationOverlayView,
-                    color: UIColor.blue,
-                    radius: Constant.smallDotRadius
-                )
-            }
-        }
-        
-        // Eyebrows
-        if let topLeftEyebrowContour = face.contour(ofType: .leftEyebrowTop) {
-            for point in topLeftEyebrowContour.points {
-                let cgPoint = normalizedPoint(fromVisionPoint: point, width: width, height: height)
-                UIConstants.addCircle(
-                    atPoint: cgPoint,
-                    to: annotationOverlayView,
-                    color: UIColor.orange,
-                    radius: Constant.smallDotRadius
-                )
-            }
-        }
-        if let bottomLeftEyebrowContour = face.contour(ofType: .leftEyebrowBottom) {
-            for point in bottomLeftEyebrowContour.points {
-                let cgPoint = normalizedPoint(fromVisionPoint: point, width: width, height: height)
-                UIConstants.addCircle(
-                    atPoint: cgPoint,
-                    to: annotationOverlayView,
-                    color: UIColor.orange,
-                    radius: Constant.smallDotRadius
-                )
-            }
-        }
-        if let topRightEyebrowContour = face.contour(ofType: .rightEyebrowTop) {
-            for point in topRightEyebrowContour.points {
-                let cgPoint = normalizedPoint(fromVisionPoint: point, width: width, height: height)
-                UIConstants.addCircle(
-                    atPoint: cgPoint,
-                    to: annotationOverlayView,
-                    color: UIColor.orange,
-                    radius: Constant.smallDotRadius
-                )
-            }
-        }
-        if let bottomRightEyebrowContour = face.contour(ofType: .rightEyebrowBottom) {
-            for point in bottomRightEyebrowContour.points {
-                let cgPoint = normalizedPoint(fromVisionPoint: point, width: width, height: height)
-                UIConstants.addCircle(
-                    atPoint: cgPoint,
-                    to: annotationOverlayView,
-                    color: UIColor.orange,
-                    radius: Constant.smallDotRadius
-                )
-            }
-        }
-        
-        // Eyes
-        if let leftEyeContour = face.contour(ofType: .leftEye) {
-            for point in leftEyeContour.points {
-                let cgPoint = normalizedPoint(fromVisionPoint: point, width: width, height: height)
-                UIConstants.addCircle(
-                    atPoint: cgPoint,
-                    to: annotationOverlayView,
-                    color: UIColor.cyan,
-                    radius: Constant.smallDotRadius
-                )
-            }
-        }
-        if let rightEyeContour = face.contour(ofType: .rightEye) {
-            for point in rightEyeContour.points {
-                let cgPoint = normalizedPoint(fromVisionPoint: point, width: width, height: height)
-                UIConstants.addCircle(
-                    atPoint: cgPoint,
-                    to: annotationOverlayView,
-                    color: UIColor.cyan,
-                    radius: Constant.smallDotRadius
-                )
-            }
-        }
-        
-        // Lips
-        if let topUpperLipContour = face.contour(ofType: .upperLipTop) {
-            for point in topUpperLipContour.points {
-                let cgPoint = normalizedPoint(fromVisionPoint: point, width: width, height: height)
-                UIConstants.addCircle(
-                    atPoint: cgPoint,
-                    to: annotationOverlayView,
-                    color: UIColor.red,
-                    radius: Constant.smallDotRadius
-                )
-            }
-        }
-        if let bottomUpperLipContour = face.contour(ofType: .upperLipBottom) {
-            for point in bottomUpperLipContour.points {
-                let cgPoint = normalizedPoint(fromVisionPoint: point, width: width, height: height)
-                UIConstants.addCircle(
-                    atPoint: cgPoint,
-                    to: annotationOverlayView,
-                    color: UIColor.red,
-                    radius: Constant.smallDotRadius
-                )
-            }
-        }
-        if let topLowerLipContour = face.contour(ofType: .lowerLipTop) {
-            for point in topLowerLipContour.points {
-                let cgPoint = normalizedPoint(fromVisionPoint: point, width: width, height: height)
-                UIConstants.addCircle(
-                    atPoint: cgPoint,
-                    to: annotationOverlayView,
-                    color: UIColor.red,
-                    radius: Constant.smallDotRadius
-                )
-            }
-        }
-        if let bottomLowerLipContour = face.contour(ofType: .lowerLipBottom) {
-            for point in bottomLowerLipContour.points {
-                let cgPoint = normalizedPoint(fromVisionPoint: point, width: width, height: height)
-                UIConstants.addCircle(
-                    atPoint: cgPoint,
-                    to: annotationOverlayView,
-                    color: UIColor.red,
-                    radius: Constant.smallDotRadius
-                )
-            }
-        }
-        
-        // Nose
-        if let noseBridgeContour = face.contour(ofType: .noseBridge) {
-            for point in noseBridgeContour.points {
-                let cgPoint = normalizedPoint(fromVisionPoint: point, width: width, height: height)
-                UIConstants.addCircle(
-                    atPoint: cgPoint,
-                    to: annotationOverlayView,
-                    color: UIColor.yellow,
-                    radius: Constant.smallDotRadius
-                )
-            }
-        }
-        if let noseBottomContour = face.contour(ofType: .noseBottom) {
-            for point in noseBottomContour.points {
-                let cgPoint = normalizedPoint(fromVisionPoint: point, width: width, height: height)
-                UIConstants.addCircle(
-                    atPoint: cgPoint,
-                    to: annotationOverlayView,
-                    color: UIColor.yellow,
-                    radius: Constant.smallDotRadius
-                )
-            }
-        }
-    }
 }
 
 // MARK: AVCaptureVideoDataOutputSampleBufferDelegate
@@ -1274,17 +1039,6 @@ extension EkycView {
         
     }
     
-    private func showPhoto(mediaType: MediaType) {
-        let photoViewController = PhotoViewController()
-        guard let photoURL = getOutputUrlIfFileExists(mediaType: mediaType) else {return}
-        if let topController = UIApplication.topViewController() {
-            photoViewController.modalPresentationStyle = .overCurrentContext
-            topController.present(photoViewController, animated: true) {
-                photoViewController.showPhoto(url: photoURL)
-            }
-        }
-    }
-    
     private func setUpWriter() {
         do {
             removeFileIfNeeded(mediaType: .video)
@@ -1540,61 +1294,6 @@ enum MediaType {
                 return "jpg"
             case .photoTurnRight:
                 return "jpg"
-        }
-    }
-}
-
-private class PhotoViewController: UIViewController {
-    
-    private lazy var imageView: UIImageView = {
-        let imageView = UIImageView(frame: .zero)
-        imageView.contentMode = .center
-        imageView.translatesAutoresizingMaskIntoConstraints = false
-        return imageView
-    }()
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        setupImageView()
-        view.addGestureRecognizer(UIPanGestureRecognizer(target: self, action: #selector(handleDismiss)))
-    }
-    
-    private func setupImageView() {
-        view.addSubview(imageView)
-        NSLayoutConstraint.activate([
-            imageView.topAnchor.constraint(equalTo: self.view.topAnchor),
-            imageView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor),
-            imageView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor),
-            imageView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor)
-        ])
-    }
-    
-    func showPhoto(url: URL) {
-        if let imageData = try? Data(contentsOf: url) {
-            if let loadedImage = UIImage(data: imageData) {
-                imageView.image = loadedImage
-            }
-        }
-    }
-    
-    private var viewTranslation = CGPoint(x: 0, y: 0)
-    @objc private func handleDismiss(sender: UIPanGestureRecognizer) {
-        switch sender.state {
-        case .changed:
-            viewTranslation = sender.translation(in: view)
-            UIView.animate(withDuration: 0.5, delay: 0, usingSpringWithDamping: 0.7, initialSpringVelocity: 1, options: .curveEaseOut, animations: {
-                self.view.transform = CGAffineTransform(translationX: 0, y: self.viewTranslation.y)
-            })
-        case .ended:
-            if viewTranslation.y < 200 {
-                UIView.animate(withDuration: 0.5, delay: 0, usingSpringWithDamping: 0.7, initialSpringVelocity: 1, options: .curveEaseOut, animations: {
-                    self.view.transform = .identity
-                })
-            } else {
-                dismiss(animated: true, completion: nil)
-            }
-        default:
-            break
         }
     }
 }
