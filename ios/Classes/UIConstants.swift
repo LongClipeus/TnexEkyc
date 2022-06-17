@@ -121,6 +121,68 @@ public class UIConstants {
         return UIImage(cgImage: image, scale: Constants.originalScale, orientation: orientation)
     }
     
+    public static func createNewUIImage(
+        from imageBuffer: CVImageBuffer,
+        orientation: UIImage.Orientation,
+        width: CGFloat,
+        height: CGFloat
+    ) -> UIImage? {
+        if let uiImage = createUIImage(
+            from: imageBuffer,
+            orientation: orientation
+        ){
+            let w = uiImage.size.width
+            let h = uiImage.size.height
+            
+            var newW = w
+            var newH = (height/width)*w
+            var x = 0.0
+            var y = 0.0
+            
+            if(newH > h){
+                newH = h
+                newW = (width/height)*h + 20
+                x = CGFloat((newW - width) / 2) + newH - newW
+            }else{
+                newH += 20
+                y = CGFloat((newH - height) / 2) + newW - newH
+            }
+            
+            let cropRect = CGRect(
+                x: y,
+                y: x,
+                width: newH,
+                height: newW
+            ).integral
+
+            guard let sourceCGImage = uiImage.cgImage else { return nil }
+            
+            guard let croppedCGImage = sourceCGImage.cropping(
+                to: cropRect
+            ) else { return nil }
+            
+            
+            let croppedImage = UIImage(
+                cgImage: croppedCGImage,
+                scale: uiImage.imageRendererFormat.scale,
+                orientation: uiImage.imageOrientation
+            )
+            
+            return croppedImage
+        }else{
+            return createUIImage(
+                from : imageBuffer,
+                orientation: orientation,
+                width: width,
+                height: height
+            )
+        }
+        
+        
+        
+    }
+    
+    
     public static func createUIImage(
         from uiImage: UIImage,
         width: CGFloat,

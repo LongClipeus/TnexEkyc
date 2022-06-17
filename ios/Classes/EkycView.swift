@@ -184,6 +184,9 @@ class EkycView: UIView {
         } catch let error {
             print("Failed to detect faces with error: \(error.localizedDescription).")
             self.updatePreviewOverlayViewWithLastFrame()
+            listDataDetect.removeAll()
+            timerTimeout.invalidate()
+            isPauseDetect = true
             self.sendCallback(detectionEvent: DetectionEvent.FAILED, imagePath: nil, videoPath: nil)
             return
         }
@@ -192,6 +195,9 @@ class EkycView: UIView {
         weak var weakSelf = self
         DispatchQueue.main.sync {
             guard let strongSelf = weakSelf else {
+                listDataDetect.removeAll()
+                timerTimeout.invalidate()
+                isPauseDetect = true
                 self.sendCallback(detectionEvent: DetectionEvent.FAILED, imagePath: nil, videoPath: nil)
                 return
             }
@@ -378,7 +384,8 @@ class EkycView: UIView {
             return
         }
         let orientation: UIImage.Orientation = isUsingFrontCamera ? .leftMirrored : .right
-        let image = UIConstants.createUIImage(from: imageBuffer, orientation: orientation, width: frame.width, height: frame.height)
+        let image = UIConstants.createNewUIImage(from: imageBuffer, orientation: orientation, width: frame.width, height: frame.height)
+        
         previewOverlayView.image = image
     }
     
@@ -706,6 +713,10 @@ extension EkycView {
         self.timerTimeout.invalidate()
         self.timerTimeout = Timer.scheduledTimer(withTimeInterval: TimeInterval(timeoutDetectionTime), repeats: true) { (_) in
             //sendEvent
+            self.listDataDetect.removeAll()
+            self.timerTimeout.invalidate()
+            self.isPauseDetect = true
+            
             if(self.isStart){
                 self.sendCallback(detectionEvent: DetectionEvent.LOST_FACE, imagePath: nil, videoPath: nil)
             }else{
@@ -723,6 +734,10 @@ extension EkycView {
         if(faces.isEmpty){
             
         }else if(faces.count > 1){
+            listDataDetect.removeAll()
+            timerTimeout.invalidate()
+            isPauseDetect = true
+            
             self.sendCallback(detectionEvent: DetectionEvent.MULTIPLE_FACE, imagePath: nil, videoPath: nil)
         }else{
             if(!isStart){

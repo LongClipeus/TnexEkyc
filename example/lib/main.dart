@@ -260,13 +260,37 @@ class _HomeAppState extends State<HomeApp> {
           ],
             mainAxisAlignment: MainAxisAlignment.center,
           ),),
-        Container(
+        Expanded(flex:1,child: Container(
           color: const Color(0xff000000),
           height: height,
           width: width,
           child: detectType.isEmpty ? null : CameraView(hCamera.round(), width.round(), detectType, ekycResults, ekycStartDetectType),
-        ),
-        const Expanded(child: SizedBox())
+        ),),
+        Container(
+          margin: EdgeInsets.only(left: 45, right: 45, bottom: 60),
+          padding: EdgeInsets.all(33),
+          decoration: BoxDecoration(
+              boxShadow: const [
+                BoxShadow(
+                    color: Color(0xff14C8FA),
+                    blurRadius: 1,
+                    spreadRadius: 1)
+              ],
+              color: const Color(0xff000A41),
+              borderRadius: BorderRadius.circular(10)),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Container(
+                height: 100,),
+              const SizedBox(
+                height: 5,
+              ),
+          Container(
+            height: 100,)
+            ],
+          ),
+        )
       ],),
     );
   }
