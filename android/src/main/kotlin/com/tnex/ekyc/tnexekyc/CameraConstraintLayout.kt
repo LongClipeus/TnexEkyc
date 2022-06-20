@@ -267,7 +267,7 @@ class CameraConstraintLayout(context: Context,
 
         try {
             videoPath = file.absolutePath
-            val fileOutput = FileOutputOptions.Builder(file).setFileSizeLimit(5000000)
+            val fileOutput = FileOutputOptions.Builder(file)
                 .build()
 
             Log.i("ekycEvent", "ekycEvent start recoder $videoPath")
