@@ -64,6 +64,9 @@ class CameraConstraintLayout(context: Context,
     private var cameraSelector: CameraSelector? = null
     private var lifecycleOwner: LifecycleOwner? = null
 
+    private var viewHeight: Int = 0
+    private var viewWidth: Int = 0
+
 
     init {
         inflate(context, R.layout.camerax_live_preview, this)
@@ -95,6 +98,8 @@ class CameraConstraintLayout(context: Context,
             Log.i("FaceDetectorProcessor","FaceDetectorProcessor layoutParams height = $heightPixel width = $widthPixel")
             layoutParams.height = heightPixel
             layoutParams.width = widthPixel
+            viewHeight = heightPixel
+            viewWidth = widthPixel
             constraintLayout?.layoutParams = layoutParams
         }
 
@@ -157,8 +162,8 @@ class CameraConstraintLayout(context: Context,
             try {
                 val faceDetectorOptions = PreferenceUtils.getFaceDetectorOptions(context)
                 val listDetectionType = getListDetectType()
-                Log.i("FaceDetectorProcessor", "FaceDetectorProcessor layoutParams height = $height width = $width")
-                context?.let { FaceDetectorProcessor(it, faceDetectorOptions, listDetectionType, this, height, width) }
+                Log.i("FaceDetectorProcessor", "FaceDetectorProcessor layoutParams height = $viewHeight width = $viewWidth")
+                context?.let { FaceDetectorProcessor(it, faceDetectorOptions, listDetectionType, this, viewHeight, viewWidth) }
             } catch (e: Exception) {
                 Toast.makeText(
                     context,
