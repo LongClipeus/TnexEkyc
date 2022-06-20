@@ -177,7 +177,7 @@ class CameraConstraintLayout(context: Context,
 
 
         try {
-            val quality = Quality.LOWEST
+            val quality = Quality.SD
             val qualitySelector = QualitySelector.from(quality)
             val builder = ImageAnalysis.Builder()
             val targetResolution = PreferenceUtils.getCameraXTargetResolution(context, lensFacing)
@@ -224,12 +224,6 @@ class CameraConstraintLayout(context: Context,
             cameraProvider!!.bindToLifecycle(/* lifecycleOwner= */lifecycleOwner!!, cameraSelector!!, analysisUseCase, videoCapture)
             Log.i("startRecoding", "call startRecoding")
             startRecoding()
-//            Timer().schedule(object : TimerTask() {
-//                override fun run() {
-//                    Log.i("startRecoding", "call startRecoding")
-//                    startRecoding()
-//                }
-//            }, 10)
         } catch (e: Exception) {
             Log.i("Camera", "Failed to process image. Error: " + e.localizedMessage)
             sendEkycEvent(DetectionEvent.FAILED, null)
@@ -273,7 +267,7 @@ class CameraConstraintLayout(context: Context,
 
         try {
             videoPath = file.absolutePath
-            val fileOutput = FileOutputOptions.Builder(file)
+            val fileOutput = FileOutputOptions.Builder(file).setFileSizeLimit(5000000)
                 .build()
 
             Log.i("ekycEvent", "ekycEvent start recoder $videoPath")
