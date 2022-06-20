@@ -177,7 +177,7 @@ class CameraConstraintLayout(context: Context,
 
 
         try {
-            val quality = Quality.SD
+            val quality = Quality.LOWEST
             val qualitySelector = QualitySelector.from(quality)
             val builder = ImageAnalysis.Builder()
             val targetResolution = PreferenceUtils.getCameraXTargetResolution(context, lensFacing)
