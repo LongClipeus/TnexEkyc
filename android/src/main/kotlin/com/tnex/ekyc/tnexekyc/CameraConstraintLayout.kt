@@ -92,6 +92,7 @@ class CameraConstraintLayout(context: Context,
             )
                 .toInt()
 
+            Log.i("FaceDetectorProcessor","FaceDetectorProcessor layoutParams height = $heightPixel width = $widthPixel")
             layoutParams.height = heightPixel
             layoutParams.width = widthPixel
             constraintLayout?.layoutParams = layoutParams
@@ -156,7 +157,8 @@ class CameraConstraintLayout(context: Context,
             try {
                 val faceDetectorOptions = PreferenceUtils.getFaceDetectorOptions(context)
                 val listDetectionType = getListDetectType()
-                context?.let { FaceDetectorProcessor(it, faceDetectorOptions, listDetectionType, this) }
+                Log.i("FaceDetectorProcessor", "FaceDetectorProcessor layoutParams height = $height width = $width")
+                context?.let { FaceDetectorProcessor(it, faceDetectorOptions, listDetectionType, this, height, width) }
             } catch (e: Exception) {
                 Toast.makeText(
                     context,

@@ -167,7 +167,7 @@ class FaceDetectorProcessor(context: Context, detectorOptions: FaceDetectorOptio
     if(faceDetect.isNullOrEmpty()){
       Log.i(TAG, "ekyc Event no face")
     }else if (faceDetect.size > 1){
-      onMultipleFace(results, graphicOverlay)
+      onMultipleFace(faceDetect, graphicOverlay)
     }else{
       val face = faceDetect[0]
       onFace(face, graphicOverlay, originalCameraImage)
