@@ -75,12 +75,14 @@ interface DetectionListener {
 
 /** Face Detector Demo.  */
 class FaceDetectorProcessor(context: Context, detectorOptions: FaceDetectorOptions?, override val listDetectionType: ArrayList<DetectionType>,
-                            override val listener: DetectionListener
+                            override val listener: DetectionListener, viewHeight: Int, viewWidth: Int
 ) :
   VisionProcessorBase<List<Face>>(context) {
 
   private var mContext: Context = context
   private var currIndexDetectionType: Int = 0
+  private var currViewHeight: Int = 0
+  private var currViewWidth: Int = 0
   private var currDetectionType: DetectionType = DetectionType.SMILE
   private val detector: FaceDetector
   private val timeoutDetectionTime: Long = 30000
@@ -103,6 +105,8 @@ class FaceDetectorProcessor(context: Context, detectorOptions: FaceDetectorOptio
   }
 
   init {
+    currViewWidth = viewWidth
+    currViewHeight = viewHeight
     isStart = false
     imageData.clear()
     val options = detectorOptions
@@ -142,23 +146,30 @@ class FaceDetectorProcessor(context: Context, detectorOptions: FaceDetectorOptio
       return
     }
 
-    if(results.isNullOrEmpty()){
-      //todo no face
-      Log.i(TAG, "ekycEvent no face")
-    }else if (results.size > 1){
-      val isMultiple = checkMultipleFace(results)
-      if(isMultiple){
-        onMultipleFace(results, graphicOverlay)
-      }else{
-        val face = getFace(results)
-        if(face == null){
-          onMultipleFace(results, graphicOverlay)
-        }else{
-          onFace(face, graphicOverlay, originalCameraImage)
+    val faceDetect = arrayListOf<Face>()
+    for (face in results) {
+      if(face.trackingId != null){
+        val x = translateX(face.boundingBox.centerX().toFloat(), graphicOverlay)
+        val y = translateY(face.boundingBox.centerY().toFloat(), graphicOverlay)
+
+        // Calculate positions.
+        val left = x - scale(face.boundingBox.width() / 2.0f, graphicOverlay)
+        val top = y - scale(face.boundingBox.height() / 2.0f, graphicOverlay)
+        val right = x + scale(face.boundingBox.width() / 2.0f, graphicOverlay)
+        val bottom = y + scale(face.boundingBox.height() / 2.0f, graphicOverlay)
+
+        if(left >= 0 && top >= 0 && right <= currViewWidth && bottom <= currViewHeight){
+          faceDetect.add(face)
         }
       }
+    }
+
+    if(faceDetect.isNullOrEmpty()){
+      Log.i(TAG, "ekyc Event no face")
+    }else if (faceDetect.size > 1){
+      onMultipleFace(results, graphicOverlay)
     }else{
-      val face = results[0]
+      val face = faceDetect[0]
       onFace(face, graphicOverlay, originalCameraImage)
     }
   }
@@ -231,24 +242,6 @@ class FaceDetectorProcessor(context: Context, detectorOptions: FaceDetectorOptio
     }
   }
 
-  private fun checkMultipleFace(faces: List<Face>): Boolean{
-    var totalFace = 0
-    for (face in faces) {
-      if(face.trackingId != null){
-        totalFace ++
-        if(totalFace > 1){
-          return true
-        }
-      }
-    }
-
-    if(totalFace == 0){
-      return true
-    }
-
-    return false
-  }
-
   private fun getFace(faces: List<Face>): Face?{
     for (face in faces) {
       if(face.trackingId != null){
@@ -311,6 +304,22 @@ class FaceDetectorProcessor(context: Context, detectorOptions: FaceDetectorOptio
 
   companion object {
     private const val TAG = "FaceDetectorProcessor"
+
+    private fun scale(imagePixel: Float, overlay: GraphicOverlay): Float {
+      return imagePixel * overlay.scaleFactor
+    }
+
+    private fun translateY(y: Float, overlay: GraphicOverlay): Float {
+      return scale(y, overlay) - overlay.postScaleHeightOffset
+    }
+
+    private fun translateX(x: Float, overlay: GraphicOverlay): Float {
+      return if (overlay.isImageFlipped) {
+        overlay.getWidth() - (scale(x, overlay) - overlay.postScaleWidthOffset)
+      } else {
+        scale(x, overlay) - overlay.postScaleWidthOffset
+      }
+    }
 
     private fun checkDetectionType(currData: HashMap<String, ArrayList<Float>>, detectionType: DetectionType): Boolean{
       return when (detectionType) {

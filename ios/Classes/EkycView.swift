@@ -43,7 +43,7 @@ class EkycView: UIView {
     fileprivate var sessionAtSourceTime: CMTime?
     
     private lazy var previewOverlayView: UIImageView = {
-        //precondition(true)
+        precondition(true)
         let previewOverlayView = UIImageView(frame: .zero)
         previewOverlayView.contentMode = UIView.ContentMode.scaleAspectFill
         previewOverlayView.translatesAutoresizingMaskIntoConstraints = false
@@ -51,8 +51,8 @@ class EkycView: UIView {
     }()
     
     private lazy var annotationOverlayView: UIView = {
-        //precondition(true)
-        let annotationOverlayView = UIView(frame: .infinite)
+        precondition(true)
+        let annotationOverlayView = UIView(frame: .zero)
         annotationOverlayView.translatesAutoresizingMaskIntoConstraints = false
         return annotationOverlayView
     }()
@@ -97,6 +97,7 @@ class EkycView: UIView {
         options.contourMode = .all
         options.classificationMode = .all
         options.performanceMode = .accurate
+        options.isTrackingEnabled = true
         let faceDetector = FaceDetector.faceDetector(options: options)
         var faces: [Face]
         do {
@@ -121,26 +122,35 @@ class EkycView: UIView {
                 self.sendCallback(detectionEvent: DetectionEvent.FAILED, imagePath: nil, videoPath: nil)
                 return
             }
-            strongSelf.detect(faces: faces, photoData: photoData)
             let epsilon = (width - strongSelf.frame.width)/2
+            var facesDetect : [Face] = []
             for face in faces {
-                
-                let normalizedRect = CGRect(
-                    x: (face.frame.origin.x + CGFloat(epsilon)) / width,
-                    y: face.frame.origin.y / height,
-                    width: face.frame.size.width / width,
-                    height: face.frame.size.height / height
-                )
-                let standardizedRect = strongSelf.previewLayer.layerRectConverted(
-                    fromMetadataOutputRect: normalizedRect
-                ).standardized
-                
-                UIConstants.addRectangle(
-                    standardizedRect,
-                    to: strongSelf.annotationOverlayView,
-                    color: UIColor.white
-                )
+                if(face.hasTrackingID){
+                    let normalizedRect = CGRect(
+                        x: (face.frame.origin.x + CGFloat(epsilon)) / width,
+                        y: face.frame.origin.y / height,
+                        width: face.frame.size.width / width,
+                        height: face.frame.size.height / height
+                    )
+                    let standardizedRect = strongSelf.previewLayer.layerRectConverted(
+                        fromMetadataOutputRect: normalizedRect
+                    ).standardized
+                    
+                    print("BienNT standardizedRect \(standardizedRect.origin.x) \(standardizedRect.origin.y)")
+                    let h = standardizedRect.origin.y + standardizedRect.size.height
+                    let w = standardizedRect.origin.x + standardizedRect.size.width
+                    
+                    if(standardizedRect.origin.y >= 0 && standardizedRect.origin.x >= 0 && h < frame.height && w < frame.width){
+                        facesDetect.append(face)
+                        UIConstants.addRectangle(
+                            standardizedRect,
+                            to: strongSelf.annotationOverlayView,
+                            color: UIColor.white
+                        )
+                    }
+                }
             }
+            strongSelf.detect(faces: facesDetect, photoData: photoData)
         }
     }
     

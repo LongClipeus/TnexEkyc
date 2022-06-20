@@ -23,7 +23,6 @@ import android.graphics.PointF
 import android.util.Log
 import com.google.mlkit.vision.face.Face
 import com.google.mlkit.vision.face.FaceContour
-import com.google.mlkit.vision.face.FaceLandmark
 import com.google.mlkit.vision.face.FaceLandmark.LandmarkType
 
 /**
@@ -71,47 +70,47 @@ class FaceGraphic constructor(overlay: GraphicOverlay?, private val face: Face) 
 
     canvas.drawRect(left, top, right, bottom, boxPaints[0])
 
-    val point1 = getMinPointF(face.getContour(FaceContour.FACE))
-    if(point1 != null){
-      canvas.drawCircle(
-        translateX(point1.x),
-        translateY(point1.y),
-        FACE_POSITION_RADIUS,
-        facePositionPaint
-      )
-    }
-
-    val point2 = getMinPointF(face.getContour(FaceContour.RIGHT_EYEBROW_TOP))
-    if(point2 != null){
-      canvas.drawCircle(
-        translateX(point2.x),
-        translateY(point2.y),
-        FACE_POSITION_RADIUS,
-        facePositionPaint
-      )
-    }
-
-    val point3 = getMinPointF(face.getContour(FaceContour.LEFT_EYEBROW_TOP))
-    if(point3 != null){
-      canvas.drawCircle(
-        translateX(point3.x),
-        translateY(point3.y),
-        FACE_POSITION_RADIUS,
-        facePositionPaint
-      )
-    }
-
-    // Draw facial landmarks
-    drawFaceLandmark(canvas, FaceLandmark.LEFT_EYE)
-    drawFaceLandmark(canvas, FaceLandmark.RIGHT_EYE)
-    drawFaceLandmark(canvas, FaceLandmark.MOUTH_BOTTOM)
-    drawFaceLandmark(canvas, FaceLandmark.MOUTH_RIGHT)
-    drawFaceLandmark(canvas, FaceLandmark.MOUTH_LEFT)
-    drawFaceLandmark(canvas, FaceLandmark.NOSE_BASE)
-    drawFaceLandmark(canvas, FaceLandmark.RIGHT_EAR)
-    drawFaceLandmark(canvas, FaceLandmark.LEFT_EAR)
-    drawFaceLandmark(canvas, FaceLandmark.LEFT_CHEEK)
-    drawFaceLandmark(canvas, FaceLandmark.RIGHT_CHEEK)
+//    val point1 = getMinPointF(face.getContour(FaceContour.FACE))
+//    if(point1 != null){
+//      canvas.drawCircle(
+//        translateX(point1.x),
+//        translateY(point1.y),
+//        FACE_POSITION_RADIUS,
+//        facePositionPaint
+//      )
+//    }
+//
+//    val point2 = getMinPointF(face.getContour(FaceContour.RIGHT_EYEBROW_TOP))
+//    if(point2 != null){
+//      canvas.drawCircle(
+//        translateX(point2.x),
+//        translateY(point2.y),
+//        FACE_POSITION_RADIUS,
+//        facePositionPaint
+//      )
+//    }
+//
+//    val point3 = getMinPointF(face.getContour(FaceContour.LEFT_EYEBROW_TOP))
+//    if(point3 != null){
+//      canvas.drawCircle(
+//        translateX(point3.x),
+//        translateY(point3.y),
+//        FACE_POSITION_RADIUS,
+//        facePositionPaint
+//      )
+//    }
+//
+//    // Draw facial landmarks
+//    drawFaceLandmark(canvas, FaceLandmark.LEFT_EYE)
+//    drawFaceLandmark(canvas, FaceLandmark.RIGHT_EYE)
+//    drawFaceLandmark(canvas, FaceLandmark.MOUTH_BOTTOM)
+//    drawFaceLandmark(canvas, FaceLandmark.MOUTH_RIGHT)
+//    drawFaceLandmark(canvas, FaceLandmark.MOUTH_LEFT)
+//    drawFaceLandmark(canvas, FaceLandmark.NOSE_BASE)
+//    drawFaceLandmark(canvas, FaceLandmark.RIGHT_EAR)
+//    drawFaceLandmark(canvas, FaceLandmark.LEFT_EAR)
+//    drawFaceLandmark(canvas, FaceLandmark.LEFT_CHEEK)
+//    drawFaceLandmark(canvas, FaceLandmark.RIGHT_CHEEK)
   }
 
   private fun getMinPointF(contour: FaceContour?): PointF?{
