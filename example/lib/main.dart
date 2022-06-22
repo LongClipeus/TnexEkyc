@@ -282,12 +282,12 @@ class _HomeAppState extends State<HomeApp> {
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               Container(
-                height: 50,),
+                height: 10,),
               const SizedBox(
                 height: 5,
               ),
           Container(
-            height: 50,)
+            height: 10,)
             ],
           ),
         )

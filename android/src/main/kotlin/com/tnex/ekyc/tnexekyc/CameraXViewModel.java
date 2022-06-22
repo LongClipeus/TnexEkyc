@@ -31,6 +31,7 @@ import androidx.lifecycle.MutableLiveData;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
 
 /** View model for interacting with CameraX. */
 @RequiresApi(VERSION_CODES.LOLLIPOP)

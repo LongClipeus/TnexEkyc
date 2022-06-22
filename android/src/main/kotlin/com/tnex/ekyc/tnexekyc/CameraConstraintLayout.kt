@@ -2,11 +2,8 @@ package com.tnex.ekyc.tnexekyc
 
 import android.annotation.SuppressLint
 import android.app.Activity
-import android.content.ContentValues
 import android.content.Context
 import android.content.ContextWrapper
-import android.os.Build
-import android.provider.MediaStore
 import android.util.AttributeSet
 import android.util.Log
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -16,18 +13,13 @@ import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.video.*
 import androidx.camera.video.VideoCapture
-import androidx.camera.view.PreviewView
-import androidx.core.content.ContentProviderCompat.requireContext
-import androidx.core.content.ContextCompat
 import androidx.core.util.Consumer
 import androidx.lifecycle.*
 import androidx.lifecycle.Observer
 import com.google.mlkit.common.MlKitException
-import io.flutter.plugin.common.EventChannel
-import kotlinx.coroutines.launch
 import java.io.File
-import java.text.SimpleDateFormat
-import java.util.*
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 
@@ -53,7 +45,7 @@ class CameraConstraintLayout(context: Context,
     private var currentRecording: Recording? = null
     private var recordingState: VideoRecordEvent? = null
     private var videoPath: String? = null
-    private val mainThreadExecutor by lazy { ContextCompat.getMainExecutor(context) }
+    private lateinit var cameraExecutor: ExecutorService
 
     private var graphicOverlay: GraphicOverlay? = null
     private var cameraProvider: ProcessCameraProvider? = null
@@ -131,6 +123,8 @@ class CameraConstraintLayout(context: Context,
     }
 
     private fun bindAllCameraUseCases() {
+        cameraExecutor = Executors.newSingleThreadExecutor()
+
         if (cameraProvider != null) {
             cameraProvider!!.unbindAll()
             bindAnalysisUseCase()
@@ -158,6 +152,7 @@ class CameraConstraintLayout(context: Context,
 
         analysisUseCase?.clearAnalyzer()
 
+
         imageProcessor =
             try {
                 val faceDetectorOptions = PreferenceUtils.getFaceDetectorOptions(context)
@@ -165,12 +160,7 @@ class CameraConstraintLayout(context: Context,
                 Log.i("FaceDetectorProcessor", "FaceDetectorProcessor layoutParams height = $viewHeight width = $viewWidth")
                 context?.let { FaceDetectorProcessor(it, faceDetectorOptions, listDetectionType, this, viewHeight, viewWidth) }
             } catch (e: Exception) {
-                Toast.makeText(
-                    context,
-                    "Can not create image processor: " + e.localizedMessage,
-                    Toast.LENGTH_LONG
-                )
-                    .show()
+                Log.i("FaceDetectorProcessor", "Can not create image processor: " + e.localizedMessage)
                 sendEkycEvent(DetectionEvent.FAILED, null)
                 return
             }
@@ -193,8 +183,9 @@ class CameraConstraintLayout(context: Context,
             analysisUseCase?.setAnalyzer(
                 // imageProcessor.processImageProxy will use another thread to run the detection underneath,
                 // thus we can just runs the analyzer itself on main thread.
-                ContextCompat.getMainExecutor(context),
+               cameraExecutor,
                 ImageAnalysis.Analyzer { imageProxy: ImageProxy ->
+                    Log.i("FaceDetectorProcessor", "ImageAnalysis $needUpdateGraphicOverlayImageSourceInfo")
                     if (needUpdateGraphicOverlayImageSourceInfo) {
                         val isImageFlipped = lensFacing == CameraSelector.LENS_FACING_FRONT
                         val rotationDegrees = imageProxy.imageInfo.rotationDegrees
@@ -207,8 +198,9 @@ class CameraConstraintLayout(context: Context,
                     }
                     try {
                         imageProcessor!!.processImageProxy(imageProxy, graphicOverlay)
+                        Log.i("FaceDetectorProcessor", "imageProcessor")
                     } catch (e: MlKitException) {
-                        Log.i("Camera", "Failed to process image. Error: " + e.localizedMessage)
+                        Log.i("FaceDetectorProcessor", "Failed to process image. Error: " + e.localizedMessage)
                         Toast.makeText(context, e.localizedMessage, Toast.LENGTH_SHORT).show()
                         sendEkycEvent(DetectionEvent.FAILED, null)
                     }
@@ -221,11 +213,11 @@ class CameraConstraintLayout(context: Context,
                 .build()
             videoCapture = VideoCapture.withOutput(recorder)
 
-            cameraProvider!!.bindToLifecycle(/* lifecycleOwner= */lifecycleOwner!!, cameraSelector!!, analysisUseCase, videoCapture)
-            Log.i("startRecoding", "call startRecoding")
+            cameraProvider!!.bindToLifecycle(/* lifecycleOwner= */lifecycleOwner!!, cameraSelector!!, videoCapture, analysisUseCase)
+            Log.i("FaceDetectorProcessor", "call startRecoding")
             startRecoding()
         } catch (e: Exception) {
-            Log.i("Camera", "Failed to process image. Error: " + e.localizedMessage)
+            Log.i("FaceDetectorProcessor", "Failed to process image. Error: " + e.localizedMessage)
             sendEkycEvent(DetectionEvent.FAILED, null)
         }
     }
@@ -274,7 +266,7 @@ class CameraConstraintLayout(context: Context,
 
             currentRecording = capture.output
                 .prepareRecording(activity, fileOutput)
-                .start(mainThreadExecutor, captureListener)
+                .start(cameraExecutor, captureListener)
         } catch (e: Exception) {
             sendEkycEvent(DetectionEvent.FAILED, null)
         }
@@ -329,11 +321,14 @@ class CameraConstraintLayout(context: Context,
 
 
     fun onStartEkyc() {
+        cameraExecutor = Executors.newSingleThreadExecutor()
+
+
         bindAllCameraUseCases()
     }
 
     fun onStopEkyc() {
-
+        cameraExecutor.shutdown()
         stopRecoding()
 
         analysisUseCase?.clearAnalyzer()

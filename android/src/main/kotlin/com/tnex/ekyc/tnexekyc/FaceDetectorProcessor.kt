@@ -142,8 +142,17 @@ class FaceDetectorProcessor(context: Context, detectorOptions: FaceDetectorOptio
   }
 
   override fun onSuccess(results: List<Face>, graphicOverlay: GraphicOverlay, originalCameraImage: Bitmap?) {
+    Log.i(TAG, "onSuccess")
     if(isPauseDetect){
       return
+    }
+
+    Log.i(TAG, "onSuccess $isPauseDetect")
+
+    if(!results.isNullOrEmpty()){
+      if(!isStart){
+        isStart = true
+      }
     }
 
     val faceDetect = arrayListOf<Face>()
@@ -164,6 +173,8 @@ class FaceDetectorProcessor(context: Context, detectorOptions: FaceDetectorOptio
       }
     }
 
+
+    Log.i(TAG, "onSuccess ${faceDetect.size}")
     if(faceDetect.isNullOrEmpty()){
       Log.i(TAG, "ekyc Event no face")
     }else if (faceDetect.size > 1){
@@ -184,10 +195,6 @@ class FaceDetectorProcessor(context: Context, detectorOptions: FaceDetectorOptio
   }
 
   private fun onFace(face:Face, graphicOverlay: GraphicOverlay, originalCameraImage: Bitmap?){
-    if(!isStart){
-      isStart = true
-    }
-
     val headEulerAngleY  = face.headEulerAngleY
     if(headEulerAngleY < 16 && headEulerAngleY > -16){
       face.smilingProbability?.let { listSmiling.add(it) }
@@ -196,7 +203,10 @@ class FaceDetectorProcessor(context: Context, detectorOptions: FaceDetectorOptio
     graphicOverlay.add(FaceGraphic(graphicOverlay, face))
 
     listDataDetect = addDataDetectionType(face, listDataDetect, currDetectionType)
+
+    Log.i(TAG, "onSuccess listDataDetect = $listDataDetect")
     val isDetectionType = validateDetectionType()
+    Log.i(TAG, "onSuccess isDetectionType = $isDetectionType")
     if(isDetectionType){
       val saveImagePath = bitmapToFile(originalCameraImage, context = mContext, fileName =  currDetectionType.type+"_"+System.currentTimeMillis().toString()+".jpg")
       if(saveImagePath != null){
@@ -242,16 +252,6 @@ class FaceDetectorProcessor(context: Context, detectorOptions: FaceDetectorOptio
     }
   }
 
-  private fun getFace(faces: List<Face>): Face?{
-    for (face in faces) {
-      if(face.trackingId != null){
-        return face
-      }
-    }
-
-    return null
-  }
-
   private fun validateDetectionType(): Boolean{
     return when (currDetectionType) {
       DetectionType.BLINK_EYE -> validateBlinkingEyesDetection()
@@ -276,8 +276,10 @@ class FaceDetectorProcessor(context: Context, detectorOptions: FaceDetectorOptio
 
   private fun validateBlinkingEyesDetection(): Boolean{
     val isDetectionType = checkDetectionType(listDataDetect, currDetectionType)
+    Log.i(TAG, "onSuccess validateBlinkingEyesDetection isDetectionType = $isDetectionType")
     if(isDetectionType){
       val isChangeEye = validateEyes(listDataDetect[DataType.LANDMARK_FACE_Y.type], listDataDetect[DataType.LANDMARK_EYEBROW_LEFT_Y.type], listDataDetect[DataType.LANDMARK_EYEBROW_RIGHT_Y.type])
+      Log.i(TAG, "onSuccess validateBlinkingEyesDetection isChangeEye = $isChangeEye")
       if(isChangeEye){
         return true
       }else{
@@ -325,8 +327,8 @@ class FaceDetectorProcessor(context: Context, detectorOptions: FaceDetectorOptio
       return when (detectionType) {
         DetectionType.BLINK_EYE -> checkBlinkingEyes(currData[DataType.EYE_LEFT.type], currData[DataType.EYE_RIGHT.type])
         DetectionType.SMILE -> checkSmiling(currData[DataType.SMILE.type])
-        DetectionType.TURN_LEFT -> checkFaceTurnLeft(currData[DataType.TURN_LEFT.type])
-        DetectionType.TURN_RIGHT -> checkFaceTurnRight(currData[DataType.TURN_RIGHT.type])
+        DetectionType.TURN_RIGHT -> checkFaceTurnLeft(currData[DataType.TURN_LEFT.type])
+        DetectionType.TURN_LEFT -> checkFaceTurnRight(currData[DataType.TURN_RIGHT.type])
       }
     }
 
@@ -334,8 +336,8 @@ class FaceDetectorProcessor(context: Context, detectorOptions: FaceDetectorOptio
       return when (detectionType) {
           DetectionType.BLINK_EYE -> addBlinkingEyes(face, currData[DataType.EYE_LEFT.type], currData[DataType.EYE_RIGHT.type], currData[DataType.LANDMARK_FACE_Y.type], currData[DataType.LANDMARK_EYEBROW_LEFT_Y.type], currData[DataType.LANDMARK_EYEBROW_RIGHT_Y.type])
           DetectionType.SMILE -> addDataSmiling(face, currData[DataType.SMILE.type], currData[DataType.MOUTH_X.type], currData[DataType.MOUTH_Y.type])
-          DetectionType.TURN_LEFT -> addFaceTurnLeft(face, currData[DataType.TURN_LEFT.type])
-          DetectionType.TURN_RIGHT -> addFaceTurnRight(face, currData[DataType.TURN_RIGHT.type])
+          DetectionType.TURN_RIGHT -> addFaceTurnLeft(face, currData[DataType.TURN_LEFT.type])
+          DetectionType.TURN_LEFT -> addFaceTurnRight(face, currData[DataType.TURN_RIGHT.type])
       }
     }
 
@@ -368,8 +370,15 @@ class FaceDetectorProcessor(context: Context, detectorOptions: FaceDetectorOptio
         newListLandmarkRightY.addAll(landmarkEyeRightY)
       }
 
+      Log.i(TAG, "onSuccess addBlinkingEyes newListDataLeft = $newListDataLeft")
+      Log.i(TAG, "onSuccess addBlinkingEyes newListDataRight = $newListDataRight")
+
+
       val decLeft = decCheck(newListDataLeft)
       val decRight = decCheck(newListDataRight)
+
+      Log.i(TAG, "onSuccess addBlinkingEyes decLeft = $decLeft decRight = $decRight isFaceStraight = $isFaceStraight")
+
       if(!decLeft || !decRight){
         newListDataLeft.clear()
         newListLandmarkLeftY.clear()
@@ -381,6 +390,14 @@ class FaceDetectorProcessor(context: Context, detectorOptions: FaceDetectorOptio
 
       if(isFaceStraight){
         if(left != null && right != null){
+          if((newListDataLeft.size > 0 && left > newListDataLeft[newListDataLeft.size -1]) || (newListDataRight.size > 0 && right > newListDataRight[newListDataRight.size -1]) ){
+            newListDataLeft.clear()
+            newListLandmarkLeftY.clear()
+            newListLandmarkFaceY.clear()
+            newListDataRight.clear()
+            newListLandmarkRightY.clear()
+          }
+
           val faceLeft = face.getContour(FaceContour.LEFT_EYEBROW_TOP)
           val minYEyeLeft = getMinPointF(faceLeft)
           val faceRight = face.getContour(FaceContour.RIGHT_EYEBROW_TOP)
@@ -414,12 +431,6 @@ class FaceDetectorProcessor(context: Context, detectorOptions: FaceDetectorOptio
           }
         }
 
-      }else{
-        newListDataLeft.clear()
-        newListDataRight.clear()
-        newListLandmarkLeftY.clear()
-        newListLandmarkRightY.clear()
-        newListLandmarkFaceY.clear()
       }
 
       val newData =  hashMapOf<String, ArrayList<Float>>()
@@ -428,6 +439,7 @@ class FaceDetectorProcessor(context: Context, detectorOptions: FaceDetectorOptio
       newData[DataType.LANDMARK_EYEBROW_LEFT_Y.type] = newListLandmarkLeftY
       newData[DataType.LANDMARK_EYEBROW_RIGHT_Y.type] = newListLandmarkRightY
       newData[DataType.LANDMARK_FACE_Y.type] = newListLandmarkFaceY
+      Log.i(TAG, "onSuccess addBlinkingEyes newData = $newData")
 
       return newData
     }
@@ -441,12 +453,13 @@ class FaceDetectorProcessor(context: Context, detectorOptions: FaceDetectorOptio
       val ly = getAmplitude(landmarkEyeLeftY)
       val ry = getAmplitude(landmarkEyeRightY)
 
-      Log.i("FaceGraphic", "FaceGraphicDrawFacecheckSmiling fy = $fy")
-      Log.i("FaceGraphic", "FaceGraphicDrawFacecheckSmiling ly = $ly")
-      Log.i("FaceGraphic", "FaceGraphicDrawFacecheckSmiling ry = $ry")
+
+      Log.i(TAG, "onSuccess FaceGraphicDrawFacecheckSmiling fy = $fy")
+      Log.i(TAG, "onSuccess FaceGraphicDrawFacecheckSmiling ly = $ly")
+      Log.i(TAG, "onSuccess FaceGraphicDrawFacecheckSmiling ry = $ry")
 
       if(fy < 8 && ly < 6  && ry < 6){
-        Log.i("FaceGraphic", "FaceGraphicDrawFacecheckSmiling")
+        Log.i(TAG, "onSuccess FaceGraphicDrawFacecheckSmiling")
         return true
       }
 
@@ -454,6 +467,9 @@ class FaceDetectorProcessor(context: Context, detectorOptions: FaceDetectorOptio
     }
 
     private fun checkBlinkingEyes(listDataLeft: ArrayList<Float>?, listDataRight: ArrayList<Float>?): Boolean{
+      Log.i(TAG, "onSuccess checkBlinkingEyes listDataLeft = $listDataLeft listDataRight = $listDataRight ")
+
+
       if(listDataLeft.isNullOrEmpty() || listDataLeft.size < 2 || listDataRight.isNullOrEmpty() || listDataRight.size < 2){
         return false
       }
@@ -464,8 +480,8 @@ class FaceDetectorProcessor(context: Context, detectorOptions: FaceDetectorOptio
       if(decLeft && decRight){
         val newLeft = sortDEC(listDataLeft)
         val newRight = sortDEC(listDataRight)
-        Log.i("FaceGraphic", "FaceGraphicDrawFacecheckSmiling newRight = $newRight")
-        Log.i("FaceGraphic", "FaceGraphicDrawFacecheckSmiling newLeft = $newLeft")
+        Log.i(TAG, "onSuccess FaceGraphicDrawFacecheckSmiling newRight = $newRight")
+        Log.i(TAG, "onSuccess FaceGraphicDrawFacecheckSmiling newLeft = $newLeft")
 
         if(newLeft[0] > 0.8f && newLeft[newLeft.size - 1 ] < 0.2f && newRight[0] > 0.8f && newRight[newRight.size - 1] < 0.2f){
           return true
@@ -492,9 +508,16 @@ class FaceDetectorProcessor(context: Context, detectorOptions: FaceDetectorOptio
         newMouthBottomLeftY.addAll(listMouthBottomLeftY)
       }
 
+      Log.i(TAG, "onSuccess addDataSmiling newMouthBottomLeftX = $newMouthBottomLeftX")
+      Log.i(TAG, "onSuccess addDataSmiling listMouthBottomLeftY = $listMouthBottomLeftY")
+      Log.i(TAG, "onSuccess addDataSmiling newListData = $newListData")
+
       val smilingProbability = face.smilingProbability
       val isFaceStraight = checkFaceStraight(face)
       val isASC = ascCheck(newListData)
+
+      Log.i(TAG, "onSuccess addDataSmiling smilingProbability = $smilingProbability isFaceStraight = $isFaceStraight isASC = $isASC")
+
       if(!isASC){
         newListData.clear()
         newMouthBottomLeftX.clear()
@@ -503,6 +526,12 @@ class FaceDetectorProcessor(context: Context, detectorOptions: FaceDetectorOptio
 
       if(isFaceStraight){
         if(smilingProbability != null){
+          if(newListData.size > 0 && smilingProbability < newListData[newListData.size - 1]){
+            newListData.clear()
+            newMouthBottomLeftX.clear()
+            newMouthBottomLeftY.clear()
+          }
+
           newListData.add(smilingProbability)
           val faceLandmark = face.getLandmark(FaceLandmark.MOUTH_BOTTOM)
           val faceLeft = face.getLandmark(FaceLandmark.MOUTH_LEFT)
@@ -520,16 +549,14 @@ class FaceDetectorProcessor(context: Context, detectorOptions: FaceDetectorOptio
             newMouthBottomLeftY.add(y)
           }
         }
-      }else{
-        newListData.clear()
-        newMouthBottomLeftX.clear()
-        newMouthBottomLeftY.clear()
       }
 
       val newData =  hashMapOf<String, ArrayList<Float>>()
       newData[DataType.SMILE.type] = newListData
       newData[DataType.MOUTH_X.type] = newMouthBottomLeftX
       newData[DataType.MOUTH_Y.type] = newMouthBottomLeftY
+
+      Log.i(TAG, "onSuccess newData = $newData")
 
       return newData
     }
@@ -574,7 +601,10 @@ class FaceDetectorProcessor(context: Context, detectorOptions: FaceDetectorOptio
       val isASC = ascCheck(newListData)
       if(!isASC){
         newListData.clear()
+      }else if(newListData.size > 0 && y < newListData[newListData.size -1]){
+        newListData.clear()
       }
+
       newListData.add(y)
 
       val newData =  hashMapOf<String, ArrayList<Float>>()
@@ -584,14 +614,14 @@ class FaceDetectorProcessor(context: Context, detectorOptions: FaceDetectorOptio
     }
 
     private fun checkFaceTurnRight(listData: ArrayList<Float>?): Boolean{
-      if(listData.isNullOrEmpty()){
+      if(listData.isNullOrEmpty() || listData.size < 2){
         return false
       }
 
       val isASC = ascCheck(listData)
       if(isASC){
         val newData = sortASC(listData)
-        if(newData[0] <= 5 &&  newData[newData.size - 1] > 40){
+        if(newData[0] <= 10 &&  newData[newData.size - 1] > 40){
           return true
         }
       }
@@ -610,6 +640,8 @@ class FaceDetectorProcessor(context: Context, detectorOptions: FaceDetectorOptio
       val isDEC = decCheck(newListData)
       if(!isDEC){
         newListData.clear()
+      }else if(newListData.size > 0 && y > newListData[newListData.size -1]){
+        newListData.clear()
       }
 
       newListData.add(y)
@@ -621,13 +653,13 @@ class FaceDetectorProcessor(context: Context, detectorOptions: FaceDetectorOptio
     }
 
     private fun checkFaceTurnLeft(listData: ArrayList<Float>?): Boolean{
-      if(listData.isNullOrEmpty()){
+      if(listData.isNullOrEmpty() || listData.size < 2){
         return false
       }
       val isDEC = decCheck(listData)
       if(isDEC){
         val newData = sortDEC(listData)
-        if(newData[0] >= -5  && newData[newData.size - 1] < -40){
+        if(newData[0] >= -10  && newData[newData.size - 1] < -40){
           return true
         }
       }
@@ -750,7 +782,7 @@ class FaceDetectorProcessor(context: Context, detectorOptions: FaceDetectorOptio
         }
       }
 
-      Log.i("FaceGraphic", "FaceGraphicDrawFacecheckSmiling max = $max min = $min")
+      Log.i(TAG, "FaceGraphicDrawFacecheckSmiling max = $max min = $min")
 
       return if (max != null && min != null) {
         max - min
