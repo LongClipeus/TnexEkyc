@@ -43,6 +43,8 @@ import java.lang.Math.min
 import java.nio.ByteBuffer
 import java.util.Timer
 import java.util.TimerTask
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
 /**
  * Abstract base class for ML Kit frame processors. Subclasses need to implement {@link
@@ -64,6 +66,7 @@ abstract class VisionProcessorBase<T>(context: Context) : VisionImageProcessor {
     context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
   private val fpsTimer = Timer()
   private val executor = ScopedExecutor(TaskExecutors.MAIN_THREAD)
+
 
   // Whether this processor is already shut down
   private var isShutdown = false
@@ -94,6 +97,12 @@ abstract class VisionProcessorBase<T>(context: Context) : VisionImageProcessor {
         override fun run() {
           framesPerSecond = frameProcessedInOneSecondInterval
           frameProcessedInOneSecondInterval = 0
+
+          Log.d(
+            TAG,
+            "Frame latency: framesPerSecond=" +
+                    framesPerSecond
+          )
         }
       },
       0,
@@ -198,6 +207,34 @@ abstract class VisionProcessorBase<T>(context: Context) : VisionImageProcessor {
       .addOnSuccessListener(executor) { processLatestImage(graphicOverlay) }
   }
 
+  override fun drawImageBitmap(bitmap: Bitmap, graphicImage: GraphicOverlay) {
+    if (isShutdown) {
+      return
+    }
+
+    graphicImage.clear()
+    graphicImage.add(CameraImageGraphic(graphicImage, bitmap))
+    graphicImage.postInvalidate()
+  }
+
+  @RequiresApi(VERSION_CODES.LOLLIPOP)
+  @ExperimentalGetImage
+  override fun drawImageProxy(image: ImageProxy, graphicImage: GraphicOverlay) {
+    if (isShutdown) {
+      return
+    }
+
+    val bitmap: Bitmap? = BitmapUtils.getBitmap(image)
+
+    if (bitmap != null) {
+      graphicImage.clear()
+      graphicImage.add(CameraImageGraphic(graphicImage, bitmap))
+      graphicImage.postInvalidate()
+    }
+
+//    image.close()
+  }
+
   // -----------------Code for processing live preview frame from CameraX API-----------------------
   @RequiresApi(VERSION_CODES.LOLLIPOP)
   @ExperimentalGetImage
@@ -226,13 +263,16 @@ abstract class VisionProcessorBase<T>(context: Context) : VisionImageProcessor {
         // may stall.
         // Currently MlImage doesn't support ImageProxy directly, so we still need to call
         // ImageProxy.close() here.
-        .addOnCompleteListener { image.close() }
+        .addOnCompleteListener {
+          image.close()
+        }
 
       return
     }
 
+    val inputImage = InputImage.fromMediaImage(image.image!!, image.imageInfo.rotationDegrees)
     requestDetectInImage(
-      InputImage.fromMediaImage(image.image!!, image.imageInfo.rotationDegrees),
+      inputImage,
       graphicOverlay,
       /* originalCameraImage= */ bitmap,
       /* shouldShowFps= */ true,
@@ -241,7 +281,9 @@ abstract class VisionProcessorBase<T>(context: Context) : VisionImageProcessor {
       // When the image is from CameraX analysis use case, must call image.close() on received
       // images when finished using them. Otherwise, new images may not be received or the camera
       // may stall.
-      .addOnCompleteListener { image.close() }
+      .addOnCompleteListener {
+        image.close()
+      }
   }
 
   // -----------------Common processing logic-------------------------------------------------------
@@ -332,9 +374,9 @@ abstract class VisionProcessorBase<T>(context: Context) : VisionImageProcessor {
             Log.d(TAG, "Memory available in system: $availableMegs MB")
           }
           graphicOverlay.clear()
-          if (originalCameraImage != null) {
-            graphicOverlay.add(CameraImageGraphic(graphicOverlay, originalCameraImage))
-          }
+//          if (originalCameraImage != null) {
+//            graphicOverlay.add(CameraImageGraphic(graphicOverlay, originalCameraImage))
+//          }
           this@VisionProcessorBase.onSuccess(results, graphicOverlay, originalCameraImage)
           graphicOverlay.postInvalidate()
         }

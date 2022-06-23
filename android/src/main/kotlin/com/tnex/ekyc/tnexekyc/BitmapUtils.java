@@ -16,6 +16,7 @@
 
 package com.tnex.ekyc.tnexekyc;
 
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.ContentResolver;
 import android.graphics.Bitmap;
@@ -195,7 +196,7 @@ public class BitmapUtils {
    * them to the NV21 array.
    */
   @RequiresApi(VERSION_CODES.KITKAT)
-  private static ByteBuffer yuv420ThreePlanesToNV21(
+  public static ByteBuffer yuv420ThreePlanesToNV21(
       Plane[] yuv420888planes, int width, int height) {
     int imageSize = width * height;
     byte[] out = new byte[imageSize + 2 * (imageSize / 4)];

@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
+import android.graphics.Bitmap
 import android.util.AttributeSet
 import android.util.Log
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -48,6 +49,8 @@ class CameraConstraintLayout(context: Context,
     private lateinit var cameraExecutor: ExecutorService
 
     private var graphicOverlay: GraphicOverlay? = null
+    private var graphicImage: GraphicOverlay? = null
+
     private var cameraProvider: ProcessCameraProvider? = null
     private var analysisUseCase: ImageAnalysis? = null
     private var imageProcessor: VisionImageProcessor? = null
@@ -64,6 +67,7 @@ class CameraConstraintLayout(context: Context,
         inflate(context, R.layout.camerax_live_preview, this)
         constraintLayout = findViewById(R.id.constraintLayout)
         graphicOverlay = findViewById(R.id.graphic_overlay)
+        graphicImage = findViewById(R.id.graphic_image)
     }
 
 
@@ -191,19 +195,28 @@ class CameraConstraintLayout(context: Context,
                         val rotationDegrees = imageProxy.imageInfo.rotationDegrees
                         if (rotationDegrees == 0 || rotationDegrees == 180) {
                             graphicOverlay!!.setImageSourceInfo(imageProxy.width, imageProxy.height, isImageFlipped)
+                            graphicImage!!.setImageSourceInfo(imageProxy.width, imageProxy.height, isImageFlipped)
                         } else {
                             graphicOverlay!!.setImageSourceInfo(imageProxy.height, imageProxy.width, isImageFlipped)
+                            graphicImage!!.setImageSourceInfo(imageProxy.height, imageProxy.width, isImageFlipped)
                         }
                         needUpdateGraphicOverlayImageSourceInfo = false
                     }
-                    try {
-                        imageProcessor!!.processImageProxy(imageProxy, graphicOverlay)
-                        Log.i("FaceDetectorProcessor", "imageProcessor")
-                    } catch (e: MlKitException) {
-                        Log.i("FaceDetectorProcessor", "Failed to process image. Error: " + e.localizedMessage)
-                        Toast.makeText(context, e.localizedMessage, Toast.LENGTH_SHORT).show()
-                        sendEkycEvent(DetectionEvent.FAILED, null)
-                    }
+
+
+
+//                    imageProcessor!!.drawImageProxy(imageProxy, graphicImage)
+//                    try {
+//                        imageProcessor!!.processImageProxy(imageProxy, graphicOverlay)
+//                        Log.i("FaceDetectorProcessor", "imageProcessor")
+//                    } catch (e: MlKitException) {
+//                        Log.i("FaceDetectorProcessor", "Failed to process image. Error: " + e.localizedMessage)
+//                        Toast.makeText(context, e.localizedMessage, Toast.LENGTH_SHORT).show()
+//                        sendEkycEvent(DetectionEvent.FAILED, null)
+//                    }
+                    //proxyImageProcess(imageProxy)
+
+                    proxyImageProcess1(imageProxy)
                 }
             )
 
@@ -218,6 +231,49 @@ class CameraConstraintLayout(context: Context,
             startRecoding()
         } catch (e: Exception) {
             Log.i("FaceDetectorProcessor", "Failed to process image. Error: " + e.localizedMessage)
+            sendEkycEvent(DetectionEvent.FAILED, null)
+        }
+    }
+
+    @SuppressLint("UnsafeOptInUsageError")
+    private fun proxyImageProcess1(imageProxy: ImageProxy){
+        val frameMetadata = FrameMetadata.Builder()
+            .setWidth(imageProxy.width)
+            .setHeight(imageProxy.height)
+            .setRotation(imageProxy.imageInfo.rotationDegrees)
+            .build()
+
+        val nv21Buffer = BitmapUtils.yuv420ThreePlanesToNV21(
+            imageProxy.image?.planes,
+            imageProxy.width,
+            imageProxy.height
+        )
+
+        val bitmap: Bitmap? = BitmapUtils.getBitmap(nv21Buffer, frameMetadata)
+        imageProxy.close()
+
+        imageProcessor!!.drawImageBitmap(bitmap, graphicImage)
+        try {
+            imageProcessor!!.processByteBuffer(nv21Buffer, frameMetadata, graphicOverlay)
+            Log.i("FaceDetectorProcessor", "imageProcessor")
+        } catch (e: MlKitException) {
+            Log.i("FaceDetectorProcessor", "Failed to process image. Error: " + e.localizedMessage)
+            Toast.makeText(context, e.localizedMessage, Toast.LENGTH_SHORT).show()
+            sendEkycEvent(DetectionEvent.FAILED, null)
+        }
+    }
+
+    @SuppressLint("UnsafeOptInUsageError")
+    private fun proxyImageProcess(imageProxy: ImageProxy){
+        val bitmap: Bitmap? = BitmapUtils.getBitmap(imageProxy)
+        imageProxy.close()
+        imageProcessor!!.drawImageBitmap(bitmap, graphicImage)
+        try {
+            imageProcessor!!.processBitmap(bitmap, graphicOverlay)
+            Log.i("FaceDetectorProcessor", "imageProcessor")
+        } catch (e: MlKitException) {
+            Log.i("FaceDetectorProcessor", "Failed to process image. Error: " + e.localizedMessage)
+            Toast.makeText(context, e.localizedMessage, Toast.LENGTH_SHORT).show()
             sendEkycEvent(DetectionEvent.FAILED, null)
         }
     }

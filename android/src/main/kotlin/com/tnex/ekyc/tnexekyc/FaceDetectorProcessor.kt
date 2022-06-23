@@ -483,7 +483,7 @@ class FaceDetectorProcessor(context: Context, detectorOptions: FaceDetectorOptio
         Log.i(TAG, "onSuccess FaceGraphicDrawFacecheckSmiling newRight = $newRight")
         Log.i(TAG, "onSuccess FaceGraphicDrawFacecheckSmiling newLeft = $newLeft")
 
-        if(newLeft[0] > 0.8f && newLeft[newLeft.size - 1 ] < 0.2f && newRight[0] > 0.8f && newRight[newRight.size - 1] < 0.2f){
+        if(newLeft[0] > 0.6f && newLeft[newLeft.size - 1 ] < 0.2f && newRight[0] > 0.6f && newRight[newRight.size - 1] < 0.2f){
           return true
         }
       }
@@ -583,7 +583,7 @@ class FaceDetectorProcessor(context: Context, detectorOptions: FaceDetectorOptio
       val isASC = ascCheck(listData)
       if(isASC){
         val newList = sortASC(listData)
-        if(newList[0] <= 0.2f && newList[newList.size - 1] >= 0.6f){
+        if(newList[0] <= 0.2f && newList[newList.size - 1] >= 0.5f){
           return true
         }
       }

@@ -57,7 +57,7 @@ public class PreferenceUtils {
             getModeTypePreferenceValue(
                     context,
                     R.string.pref_key_live_preview_face_detection_performance_mode,
-                    FaceDetectorOptions.PERFORMANCE_MODE_ACCURATE);
+                    FaceDetectorOptions.PERFORMANCE_MODE_FAST);
 
     SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
     boolean enableFaceTracking =
