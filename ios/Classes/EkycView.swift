@@ -749,7 +749,7 @@ extension EkycView {
                 let newLeft = sortDEC(listData: l)
                 let newRight = sortDEC(listData: r)
                 
-                if(newLeft[0] > 0.6 && newLeft[newLeft.count - 1 ] < 0.2 && newRight[0] > 0.6 && newRight[newRight.count - 1] < 0.2){
+                if(newLeft[0] > 0.7 && newLeft[newLeft.count - 1 ] < 0.2 && newRight[0] > 0.7 && newRight[newRight.count - 1] < 0.2){
                     return true
                 }
             }
@@ -851,7 +851,7 @@ extension EkycView {
             let isASC = ascCheck(listData: data)
             if(isASC){
                 let newList = sortASC(listData: data)
-                if(newList[0] <= 0.2 && newList[newList.count - 1] >= 0.5){
+                if(newList[0] <= 0.2 && newList[newList.count - 1] >= 0.6){
                     return true
                 }
             }
