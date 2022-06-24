@@ -195,22 +195,36 @@ public class UIConstants {
         var newH = (height/width)*w
         var x = 0.0
         var y = 0.0
-        
+        var cropRect = CGRect(
+            x: x,
+            y: y,
+            width: newW,
+            height: newH
+        ).integral
         if(newH > h){
+            print("BienNT newH > h")
             newH = h
-            newW = (width/height)*h + 20
-            x = CGFloat((newW - width) / 2) + newH - newW
+            newW = (width/height)*h + 30
+            x = CGFloat((newW - width) / 2) + newH - newW + 10
+            cropRect = CGRect(
+                x: x,
+                y: y,
+                width: newW,
+                height: newH
+            ).integral
         }else{
-            newH += 20
-            y = CGFloat((newH - height) / 2) + newW - newH
+            print("BienNT newH < h")
+            newH += 30
+            y = CGFloat((newH - height) / 2) + newW - newH + 10
+            cropRect = CGRect(
+                x: y,
+                y: x,
+                width: newH,
+                height: newW
+            ).integral
         }
         
-        let cropRect = CGRect(
-            x: y,
-            y: x,
-            width: newH,
-            height: newW
-        ).integral
+        print("BienNT x = \(x) y = \(y) newH = \(newH) newW = \(newW)")
 
         guard let sourceCGImage = uiImage.cgImage else { return nil }
         
