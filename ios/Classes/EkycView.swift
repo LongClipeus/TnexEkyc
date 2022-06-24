@@ -547,14 +547,14 @@ extension EkycView {
                     timerTimeout.invalidate()
                     isPauseDetect = true
                     
-                    let smiling = getAmplitude(listCheck: listSmiling)
-                    if(smiling <= 0.4){
-                        self.sendCallback(detectionEvent: DetectionEvent.LOST_FACE, imagePath: nil, videoPath: nil)
-                    }else{
+//                    let smiling = getAmplitude(listCheck: listSmiling)
+//                    if(smiling <= 0.4){
+//                        self.sendCallback(detectionEvent: DetectionEvent.LOST_FACE, imagePath: nil, videoPath: nil)
+//                    }else{
                         let videoPath = getVideoPath()
                         let imagePath = getListImagePath()
                         self.sendCallback(detectionEvent: DetectionEvent.SUCCESS, imagePath: imagePath, videoPath: videoPath)
-                    }
+//                    }
                 }
             }
         }

@@ -625,8 +625,6 @@ class FaceDetectorProcessor(context: Context, detectorOptions: FaceDetectorOptio
           return true
         }
       }
-
-
       return false
     }
 
