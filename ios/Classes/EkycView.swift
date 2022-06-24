@@ -673,6 +673,14 @@ extension EkycView {
         
         
         if(isFaceStraight){
+            if((newListDataLeft.count > 0 && left > newListDataLeft[newListDataLeft.count - 1]) || (newListDataRight.count > 0 && right > newListDataRight[newListDataRight.count - 1]) ){
+                newListDataLeft.removeAll()
+                newListLandmarkLeftY.removeAll()
+                newListLandmarkFaceY.removeAll()
+                newListDataRight.removeAll()
+                newListLandmarkRightY.removeAll()
+            }
+            
             let faceLeft = face.contour(ofType: .leftEyebrowTop)
             let minYEyeLeft = getMinPointF(contour: faceLeft)
             let faceRight = face.contour(ofType: .rightEyebrowTop)
@@ -703,12 +711,6 @@ extension EkycView {
             
             print("BienNT Log Detect newListDataRight =  \(newListDataRight) newListDataLeft = \(newListDataLeft) isFaceStraight = \(isFaceStraight)")
             
-        }else{
-            newListDataLeft.removeAll()
-            newListDataRight.removeAll()
-            newListLandmarkLeftY.removeAll()
-            newListLandmarkRightY.removeAll()
-            newListLandmarkFaceY.removeAll()
         }
         
         var newData: [String: [Float]] = [:]
@@ -747,7 +749,7 @@ extension EkycView {
                 let newLeft = sortDEC(listData: l)
                 let newRight = sortDEC(listData: r)
                 
-                if(newLeft[0] > 0.8 && newLeft[newLeft.count - 1 ] < 0.2 && newRight[0] > 0.8 && newRight[newRight.count - 1] < 0.2){
+                if(newLeft[0] > 0.6 && newLeft[newLeft.count - 1 ] < 0.2 && newRight[0] > 0.6 && newRight[newRight.count - 1] < 0.2){
                     return true
                 }
             }
@@ -792,6 +794,12 @@ extension EkycView {
         }
         
         if(isFaceStraight){
+            if(newListData.count > 0 && Float(smilingProbability) < newListData[newListData.count - 1]){
+                newListData.removeAll()
+                newMouthBottomLeftX.removeAll()
+                newMouthBottomLeftY.removeAll()
+            }
+            
             newListData.append(Float(smilingProbability))
             print("BienNT Log Detect addDataSmiling  newListData =  \(newListData)")
             
@@ -843,7 +851,7 @@ extension EkycView {
             let isASC = ascCheck(listData: data)
             if(isASC){
                 let newList = sortASC(listData: data)
-                if(newList[0] <= 0.2 && newList[newList.count - 1] >= 0.6){
+                if(newList[0] <= 0.2 && newList[newList.count - 1] >= 0.5){
                     return true
                 }
             }
@@ -868,6 +876,8 @@ extension EkycView {
         let isASC = ascCheck(listData: newListData)
         if(!isASC){
             newListData.removeAll()
+        }else if(newListData.count > 0 && Float(y) < newListData[newListData.count - 1]){
+            newListData.removeAll()
         }
         
         newListData.append(Float(y))
@@ -886,7 +896,7 @@ extension EkycView {
                 let newData = sortASC(listData: data)
                 print("BienNT Log Detect addFaceTurnRight  newData =  \(newData)")
 
-                if(newData[0] <= 5 &&  newData[newData.count - 1] > 40){
+                if(newData[0] <= 10 &&  newData[newData.count - 1] > 40){
                     return true
                 }
             }
@@ -908,7 +918,9 @@ extension EkycView {
         let isDEC = decCheck(listData: newListData)
         if(!isDEC){
             newListData.removeAll()
-        }
+        }else if(newListData.count > 0 && Float(y) > newListData[newListData.count - 1]){
+            newListData.removeAll()
+          }
         
         newListData.append(Float(y))
         print("BienNT Log Detect addFaceTurnLeft  newListData =  \(newListData)")
@@ -927,7 +939,7 @@ extension EkycView {
                 let newData = sortDEC(listData: data)
                 print("BienNT Log Detect addFaceTurnLeft  newData =  \(newData)")
 
-                if(newData[0] >= -5  && newData[newData.count - 1] < -40){
+                if(newData[0] >= -10  && newData[newData.count - 1] < -40){
                     return true
                 }
             }

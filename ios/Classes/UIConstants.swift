@@ -204,8 +204,8 @@ public class UIConstants {
         if(newH > h){
             print("BienNT newH > h")
             newH = h
-            newW = (width/height)*h + 30
-            x = CGFloat((newW - width) / 2) + newH - newW - 4
+            newW = (width/height)*h + 32
+            x = CGFloat((newW - width) / 2) + newH - newW - 6
             cropRect = CGRect(
                 x: x,
                 y: y,
@@ -214,8 +214,8 @@ public class UIConstants {
             ).integral
         }else{
             print("BienNT newH < h")
-            newH += 30
-            y = CGFloat((newH - height) / 2) + newW - newH - 4
+            newH += 32
+            y = CGFloat((newH - height) / 2) + newW - newH - 6
             cropRect = CGRect(
                 x: y,
                 y: x,
