@@ -37,6 +37,8 @@ class CameraCaptureLayout(context: Context,
     private var cameraProvider: ProcessCameraProvider? = null
     private var imageCapture: ImageCapture? = null
     private var lifecycleOwner: LifecycleOwner? = null
+    private var viewHeight: Int = 0
+    private var viewWidth: Int = 0
 
 
     init {
@@ -66,6 +68,8 @@ class CameraCaptureLayout(context: Context,
 
             layoutParams.height = heightPixel
             layoutParams.width = widthPixel
+            viewHeight = heightPixel
+            viewWidth = widthPixel
             constraintLayout.layoutParams = layoutParams
         }
 
@@ -118,7 +122,10 @@ class CameraCaptureLayout(context: Context,
 
         imageCapture = ImageCapture.Builder()
             .build()
-        imageCapture!!.setCropAspectRatio(Rational(width, height))
+        if(viewHeight > 0 && viewWidth > 0){
+            imageCapture!!.setCropAspectRatio(Rational(viewWidth, viewHeight))
+        }
+
         val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
 
         try {
