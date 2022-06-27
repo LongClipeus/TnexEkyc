@@ -70,6 +70,7 @@ interface DetectionListener {
 
   fun onResults(event: DetectionEvent, imagesPath: HashMap<String, String>?)
   fun onStartDetectionType(type: String)
+  fun onStartRecording()
 }
 
 
@@ -96,12 +97,13 @@ class FaceDetectorProcessor(context: Context, detectorOptions: FaceDetectorOptio
 
   private var runnableTimeout: Runnable = Runnable {
     Log.i(TAG, "ekycEvent runnableTimeout")
-    clearDetectData()
     if(isStart){
       listener.onResults(DetectionEvent.LOST_FACE, null)
     }else{
       listener.onResults(DetectionEvent.NO_FACE, null)
     }
+
+    clearDetectData()
   }
 
   init {
@@ -149,12 +151,6 @@ class FaceDetectorProcessor(context: Context, detectorOptions: FaceDetectorOptio
 
     Log.i(TAG, "onSuccess $isPauseDetect")
 
-    if(!results.isNullOrEmpty()){
-      if(!isStart){
-        isStart = true
-      }
-    }
-
     val faceDetect = arrayListOf<Face>()
     for (face in results) {
       if(face.trackingId != null){
@@ -173,24 +169,29 @@ class FaceDetectorProcessor(context: Context, detectorOptions: FaceDetectorOptio
       }
     }
 
-
     Log.i(TAG, "onSuccess ${faceDetect.size}")
     if(faceDetect.isNullOrEmpty()){
       Log.i(TAG, "ekyc Event no face")
-    }else if (faceDetect.size > 1){
-      onMultipleFace(faceDetect, graphicOverlay)
     }else{
-      val face = faceDetect[0]
-      onFace(face, graphicOverlay, originalCameraImage)
+      if(!isStart){
+        listener.onStartRecording()
+        isStart = true
+      }
+
+      if (faceDetect.size > 1){
+        onMultipleFace(faceDetect, graphicOverlay)
+      }else{
+        val face = faceDetect[0]
+        onFace(face, graphicOverlay, originalCameraImage)
+      }
     }
   }
 
   private fun clearDetectData(){
     mHandler.removeCallbacks(runnableTimeout)
     isPauseDetect = true
-    isStart = false
     imageData.clear()
-    isPauseDetect = true
+    isStart = false
     listDataDetect.clear()
   }
 
@@ -231,18 +232,18 @@ class FaceDetectorProcessor(context: Context, detectorOptions: FaceDetectorOptio
         val smiling = getAmplitude(listSmiling)
         Log.i("SUCCESS", "CHECK_FACE check listSmiling = $listSmiling")
         if(smiling <= 0.2f){
-          clearDetectData()
           listener.onResults(DetectionEvent.LOST_FACE, null)
         }else{
           listener.onResults(DetectionEvent.SUCCESS, imageData)
         }
+        clearDetectData()
       }
     }
   }
 
   private fun onMultipleFace(faces: List<Face>, graphicOverlay: GraphicOverlay){
-    clearDetectData()
     listener.onResults(DetectionEvent.MULTIPLE_FACE, null)
+    clearDetectData()
     Log.i(TAG, "ekycEvent multiple face")
     for (face in faces) {
       Log.i("ekycEventMultipleFace", "trackingId = " + face.trackingId)
@@ -299,8 +300,8 @@ class FaceDetectorProcessor(context: Context, detectorOptions: FaceDetectorOptio
   }
 
   override fun onFailure(e: Exception) {
-    clearDetectData()
     listener.onResults(DetectionEvent.FAILED, null)
+    clearDetectData()
     Log.i(TAG, "Face detection failed $e")
   }
 

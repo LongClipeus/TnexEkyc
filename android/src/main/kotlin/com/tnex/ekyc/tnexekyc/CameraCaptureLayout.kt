@@ -120,11 +120,12 @@ class CameraCaptureLayout(context: Context,
                 it.setSurfaceProvider(previewView.surfaceProvider)
             }
 
-        imageCapture = ImageCapture.Builder()
+        imageCapture = ImageCapture.Builder().setJpegQuality(50)
             .build()
         if(viewHeight > 0 && viewWidth > 0){
             imageCapture!!.setCropAspectRatio(Rational(viewWidth, viewHeight))
         }
+
 
         val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
 

@@ -227,8 +227,6 @@ class CameraConstraintLayout(context: Context,
             videoCapture = VideoCapture.withOutput(recorder)
 
             cameraProvider!!.bindToLifecycle(/* lifecycleOwner= */lifecycleOwner!!, cameraSelector!!, videoCapture, analysisUseCase)
-            Log.i("FaceDetectorProcessor", "call startRecoding")
-            startRecoding()
         } catch (e: Exception) {
             Log.i("FaceDetectorProcessor", "Failed to process image. Error: " + e.localizedMessage)
             sendEkycEvent(DetectionEvent.FAILED, null)
@@ -367,6 +365,11 @@ class CameraConstraintLayout(context: Context,
 
     override fun onStartDetectionType(type: String) {
         listener.onStartDetectionType(type)
+    }
+
+    override fun onStartRecording() {
+        Log.i("FaceDetectorProcessor", "call startRecoding")
+        startRecoding()
     }
 
 

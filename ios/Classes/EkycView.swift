@@ -105,10 +105,8 @@ class EkycView: UIView {
         } catch let error {
             print("Failed to detect faces with error: \(error.localizedDescription).")
             self.updatePreviewOverlayViewWithLastFrame()
-            listDataDetect.removeAll()
-            timerTimeout.invalidate()
-            isPauseDetect = true
             self.sendCallback(detectionEvent: DetectionEvent.FAILED, imagePath: nil, videoPath: nil)
+            clearDetectData()
             return
         }
     
@@ -116,10 +114,8 @@ class EkycView: UIView {
         weak var weakSelf = self
         DispatchQueue.main.sync {
             guard let strongSelf = weakSelf else {
-                listDataDetect.removeAll()
-                timerTimeout.invalidate()
-                isPauseDetect = true
                 self.sendCallback(detectionEvent: DetectionEvent.FAILED, imagePath: nil, videoPath: nil)
+                clearDetectData()
                 return
             }
             let epsilon = (width - strongSelf.frame.width)/2
@@ -444,7 +440,7 @@ extension EkycView {
             startSession()
             delayDetect()
             startDetectTimeout()
-            startRecordVideo()
+            //startRecordVideo()
         }
     }
     
@@ -488,17 +484,23 @@ extension EkycView {
         self.timerTimeout.invalidate()
         self.timerTimeout = Timer.scheduledTimer(withTimeInterval: TimeInterval(timeoutDetectionTime), repeats: true) { (_) in
             //sendEvent
-            self.listDataDetect.removeAll()
-            self.timerTimeout.invalidate()
-            self.isPauseDetect = true
-            
             if(self.isStart){
                 self.sendCallback(detectionEvent: DetectionEvent.LOST_FACE, imagePath: nil, videoPath: nil)
             }else{
                 self.sendCallback(detectionEvent: DetectionEvent.NO_FACE, imagePath: nil, videoPath: nil)
             }
+            
+            clearDetectData()
         }
     }
+    
+    private func clearDetectData(){
+        isStart = false
+        timerTimeout.invalidate()
+        isPauseDetect = true
+        listDataDetect.removeAll()
+        imageData.removeAll()
+      }
     
     private func detect(faces: [Face], photoData: PhotoData){
         print("BienNT Log Detect")
@@ -509,14 +511,12 @@ extension EkycView {
         if(faces.isEmpty){
             
         }else if(faces.count > 1){
-            listDataDetect.removeAll()
-            timerTimeout.invalidate()
-            isPauseDetect = true
-            
             self.sendCallback(detectionEvent: DetectionEvent.MULTIPLE_FACE, imagePath: nil, videoPath: nil)
+            clearDetectData()
         }else{
             if(!isStart){
                 isStart = true
+                startRecordVideo()
             }
             
             let face = faces[0]
@@ -543,10 +543,6 @@ extension EkycView {
                 }else{
                     takePhoto(mediaType: currDetectionType.getMediaType(), photoData: photoData)
                     
-                    listDataDetect.removeAll()
-                    timerTimeout.invalidate()
-                    isPauseDetect = true
-                    
                     let smiling = getAmplitude(listCheck: listSmiling)
                     if(smiling <= 0.2){
                         self.sendCallback(detectionEvent: DetectionEvent.LOST_FACE, imagePath: nil, videoPath: nil)
@@ -555,6 +551,8 @@ extension EkycView {
                         let imagePath = getListImagePath()
                         self.sendCallback(detectionEvent: DetectionEvent.SUCCESS, imagePath: imagePath, videoPath: videoPath)
                     }
+                    
+                    clearDetectData()
                 }
             }
         }
