@@ -157,12 +157,14 @@ class CameraCaptureLayout(context: Context,
     fun captureImage(){
         val capture = imageCapture
         if(capture == null){
+            Log.i("BienNT", "captureImage IMAGE_FAILED 1")
             sendError("IMAGE_FAILED")
             return
         }
 
         val file = createFile()
         if(file == null){
+            Log.i("BienNT", "captureImage IMAGE_FAILED 2")
             sendError("IMAGE_FAILED")
             return
         }
@@ -175,18 +177,21 @@ class CameraCaptureLayout(context: Context,
                 object : ImageCapture.OnImageSavedCallback {
                     override fun onError(error: ImageCaptureException)
                     {
+                        Log.i("BienNT", "captureImage IMAGE_FAILED 3")
                         sendError("IMAGE_FAILED")
                     }
                     override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
 
                         val uri = outputFileResults.savedUri
                         if(uri == null){
+                            Log.i("BienNT", "captureImage IMAGE_FAILED 4")
                             sendError("IMAGE_FAILED")
                             return
                         }
 
                         val path = uri.path
                         if(path.isNullOrEmpty()){
+                            Log.i("BienNT", "captureImage IMAGE_FAILED 5")
                             sendError("IMAGE_FAILED")
                             return
                         }
@@ -195,6 +200,7 @@ class CameraCaptureLayout(context: Context,
                     }
                 })
         } catch (e: Exception) {
+            Log.i("BienNT", "captureImage IMAGE_FAILED 6 + ${e.message}")
             sendError("IMAGE_FAILED")
         }
     }
