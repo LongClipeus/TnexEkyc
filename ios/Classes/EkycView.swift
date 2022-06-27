@@ -106,7 +106,7 @@ class EkycView: UIView {
             print("Failed to detect faces with error: \(error.localizedDescription).")
             self.updatePreviewOverlayViewWithLastFrame()
             self.sendCallback(detectionEvent: DetectionEvent.FAILED, imagePath: nil, videoPath: nil)
-            clearDetectData()
+            self.clearDetectData()
             return
         }
     
@@ -115,7 +115,7 @@ class EkycView: UIView {
         DispatchQueue.main.sync {
             guard let strongSelf = weakSelf else {
                 self.sendCallback(detectionEvent: DetectionEvent.FAILED, imagePath: nil, videoPath: nil)
-                clearDetectData()
+                self.clearDetectData()
                 return
             }
             let epsilon = (width - strongSelf.frame.width)/2
@@ -490,7 +490,7 @@ extension EkycView {
                 self.sendCallback(detectionEvent: DetectionEvent.NO_FACE, imagePath: nil, videoPath: nil)
             }
             
-            clearDetectData()
+            self.clearDetectData()
         }
     }
     
@@ -512,7 +512,7 @@ extension EkycView {
             
         }else if(faces.count > 1){
             self.sendCallback(detectionEvent: DetectionEvent.MULTIPLE_FACE, imagePath: nil, videoPath: nil)
-            clearDetectData()
+            self.clearDetectData()
         }else{
             if(!isStart){
                 isStart = true
@@ -552,7 +552,7 @@ extension EkycView {
                         self.sendCallback(detectionEvent: DetectionEvent.SUCCESS, imagePath: imagePath, videoPath: videoPath)
                     }
                     
-                    clearDetectData()
+                    self.clearDetectData()
                 }
             }
         }
