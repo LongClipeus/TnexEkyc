@@ -16,6 +16,51 @@ public class UIConstants {
     
     // MARK: - Public
     
+    static func getPathUrl(_ path: String)->URL {
+            return URL(fileURLWithPath: excludeFileProtocol(path))
+    }
+    
+    static let fileManager = FileManager.default
+        
+        static func basePath()->String {
+            let path = "\(NSTemporaryDirectory())video_compress"
+            do {
+                if !fileManager.fileExists(atPath: path) {
+                    try! fileManager.createDirectory(atPath: path,
+                                                     withIntermediateDirectories: true, attributes: nil)
+                }
+            }
+            return path
+        }
+        
+    static func getFileName(_ path: String)->String {
+            return stripFileExtension((path as NSString).lastPathComponent)
+    }
+    
+    static func stripFileExtension(_ fileName:String)->String {
+            var components = fileName.components(separatedBy: ".")
+            if components.count > 1 {
+                components.removeLast()
+                return components.joined(separator: ".")
+            } else {
+                return fileName
+            }
+    }
+    
+    static func deleteFile(_ path: String, clear: Bool = false) {
+            let url = getPathUrl(path)
+            if fileManager.fileExists(atPath: url.absoluteString) {
+                try? fileManager.removeItem(at: url)
+            }
+            if clear {
+                try? fileManager.removeItem(at: url)
+            }
+    }
+    
+    static func excludeFileProtocol(_ path: String)->String {
+            return path.replacingOccurrences(of: "file://", with: "")
+    }
+    
     public static func addCircle(
         atPoint point: CGPoint,
         to view: UIView,

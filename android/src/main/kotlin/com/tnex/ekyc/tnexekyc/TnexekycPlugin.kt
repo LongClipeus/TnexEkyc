@@ -1,5 +1,6 @@
 package com.tnex.ekyc.tnexekyc
 
+import android.content.Context
 import android.util.Log
 import androidx.annotation.NonNull
 
@@ -20,6 +21,7 @@ class TnexekycPlugin: FlutterPlugin, MethodCallHandler, ActivityAware, EkycListe
   /// This local reference serves to register the plugin with the Flutter Engine and unregister it
   /// when the Flutter Engine is detached from the Activity
   private lateinit var channel : MethodChannel
+  private lateinit var context: Context
   private lateinit var eventEkycChannel: EventChannel
   private lateinit var eventCaptureChannel: EventChannel
   private lateinit var flutterPluginBinding : FlutterPlugin.FlutterPluginBinding
@@ -38,6 +40,7 @@ class TnexekycPlugin: FlutterPlugin, MethodCallHandler, ActivityAware, EkycListe
 
     eventCaptureChannel = EventChannel(flutterPluginBinding.binaryMessenger, "tnex_capture_listener")
     eventCaptureChannel.setStreamHandler(this)
+    context = flutterPluginBinding.applicationContext
   }
 
   override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
@@ -51,6 +54,27 @@ class TnexekycPlugin: FlutterPlugin, MethodCallHandler, ActivityAware, EkycListe
       captureFactory?.onStartCamera()
     } else if (call.method == "onStopCamera") {
       captureFactory?.onStopCamera()
+    } else if (call.method == "compressVideo") {
+      val path = call.argument<String>("path")
+      var quality = call.argument<Int>("quality")
+      if(path.isNullOrEmpty()){
+        result.success(null)
+      }else{
+        if(quality == null){
+          quality = 1;
+        }
+
+        CompressVideo().getBitmap(path, quality, context, object  : CompressVideoListener {
+          override fun onCompleted(imagePath: String) {
+            result.success(imagePath)
+          }
+
+          override fun onFailed() {
+            result.success(null)
+          }
+
+        })
+      }
     } else {
       result.notImplemented()
     }
