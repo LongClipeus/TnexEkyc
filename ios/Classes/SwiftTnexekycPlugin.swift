@@ -20,7 +20,6 @@ public class SwiftTnexekycPlugin: NSObject, FlutterPlugin {
     
     
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-        result("iOS " + UIDevice.current.systemVersion)
         switch call.method {
         case "onStartEkyc":
             guard let factoryView = SwiftTnexekycPlugin.factoryEkyc else {

@@ -90,10 +90,42 @@ class _HomeAppState extends State<HomeApp> {
     }
   }
 
+  Future<double> getFileSize(String filePath) async {
+    final file = File(filePath);
+    int sizeInBytes = file.lengthSync();
+    double sizeInMb = sizeInBytes / (1024 * 1024);
+    return sizeInMb;
+  }
+
+  Future<void> compressVideo(String videoPathUpload) async {
+    String mediaPath = videoPathUpload;
+    var videoSize = await getFileSize(mediaPath);
+    debugPrint("addKYCDocument videoPathUpload = $mediaPath");
+    debugPrint("addKYCDocument videoSize = $videoSize");
+    try{
+      String? mediaPath = await Tnexekyc.compressVideo(videoPathUpload,
+          quality: VideoQuality.MediumQuality);
+      debugPrint("addKYCDocument mediaPath =  $mediaPath");
+
+      if(mediaPath != null && mediaPath.isNotEmpty){
+        videoSize = await getFileSize(mediaPath);
+        debugPrint("addKYCDocument videoNewSize = $videoSize");
+      }
+    }catch(err){
+      debugPrint("addKYCDocument compressVideo err ${err.toString()}");
+    }
+
+
+  }
+
   void ekycResults(Map<dynamic, dynamic> map) {
     debugPrint("ekycEventBIENNT ekycResults Main $map");
     Tnexekyc.onStopEkyc();
     var eventType = map['eventType'];
+    if(eventType == "SUCCESS"){
+      var videoPathUpload =  map['videoPath'];
+      compressVideo(videoPathUpload);
+    }
     var title = getTitle(eventType);
     var mss = getMss(eventType);
     _showMyDialog(title, mss);

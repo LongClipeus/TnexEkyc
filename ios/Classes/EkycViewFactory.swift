@@ -95,7 +95,7 @@ class EkycViewFactory: NSObject, FlutterPlatformViewFactory, FlutterStreamHandle
                 self.sendDartEvent(eventType: "START_DETECTION", imagePath: nil, videoPath: nil, detectType: result)
             }, completion: { detectType, imagePath, videoPath in
                 print("listenerDetection detectType \(detectType.rawValue) imagePath \(String(describing: imagePath))  videoPath \(String(describing: videoPath))")
-                self.sendDartEvent(eventType: detectType.rawValue, imagePath: nil, videoPath: nil, detectType: nil)
+                self.sendDartEvent(eventType: detectType.rawValue, imagePath: imagePath, videoPath: videoPath, detectType: nil)
             })
         
         return nativeView!

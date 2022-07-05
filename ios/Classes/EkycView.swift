@@ -543,14 +543,14 @@ extension EkycView {
                 }else{
                     takePhoto(mediaType: currDetectionType.getMediaType(), photoData: photoData)
                     
-                    let smiling = getAmplitude(listCheck: listSmiling)
-                    if(smiling <= 0.2){
-                        self.sendCallback(detectionEvent: DetectionEvent.LOST_FACE, imagePath: nil, videoPath: nil)
-                    }else{
+//                    let smiling = getAmplitude(listCheck: listSmiling)
+//                    if(smiling <= 0.2){
+//                        self.sendCallback(detectionEvent: DetectionEvent.LOST_FACE, imagePath: nil, videoPath: nil)
+//                    }else{
                         let videoPath = getVideoPath()
                         let imagePath = getListImagePath()
                         self.sendCallback(detectionEvent: DetectionEvent.SUCCESS, imagePath: imagePath, videoPath: videoPath)
-                    }
+//                    }
                     
                     self.clearDetectData()
                 }
@@ -655,29 +655,29 @@ extension EkycView {
             newListLandmarkRightY = eyeRightY
         }
         
-        print("BienNT Log Detect newListDataLeft =  \(newListDataLeft)")
-        print("BienNT Log Detect newListDataRight =  \(newListDataRight)")
-        let decLeft = decCheck(listData: newListDataLeft)
-        let decRight = decCheck(listData: newListDataRight)
+//        print("BienNT Log Detect newListDataLeft =  \(newListDataLeft)")
+//        print("BienNT Log Detect newListDataRight =  \(newListDataRight)")
+//        let decLeft = decCheck(listData: newListDataLeft)
+//        let decRight = decCheck(listData: newListDataRight)
+//
+//        print("BienNT Log Detect decLeft =  \(decLeft) decRight = \(decRight) isFaceStraight = \(isFaceStraight)")
+//        if(!decLeft || !decRight){
+//            newListDataLeft.removeAll()
+//            newListLandmarkLeftY.removeAll()
+//            newListLandmarkFaceY.removeAll()
+//            newListDataRight.removeAll()
+//            newListLandmarkRightY.removeAll()
+//        }
         
-        print("BienNT Log Detect decLeft =  \(decLeft) decRight = \(decRight) isFaceStraight = \(isFaceStraight)")
-        if(!decLeft || !decRight){
-            newListDataLeft.removeAll()
-            newListLandmarkLeftY.removeAll()
-            newListLandmarkFaceY.removeAll()
-            newListDataRight.removeAll()
-            newListLandmarkRightY.removeAll()
-        }
         
-        
-        if(isFaceStraight){
-            if((newListDataLeft.count > 0 && left > newListDataLeft[newListDataLeft.count - 1]) || (newListDataRight.count > 0 && right > newListDataRight[newListDataRight.count - 1]) ){
-                newListDataLeft.removeAll()
-                newListLandmarkLeftY.removeAll()
-                newListLandmarkFaceY.removeAll()
-                newListDataRight.removeAll()
-                newListLandmarkRightY.removeAll()
-            }
+//        if(isFaceStraight){
+//            if((newListDataLeft.count > 0 && left > newListDataLeft[newListDataLeft.count - 1]) || (newListDataRight.count > 0 && right > newListDataRight[newListDataRight.count - 1]) ){
+//                newListDataLeft.removeAll()
+//                newListLandmarkLeftY.removeAll()
+//                newListLandmarkFaceY.removeAll()
+//                newListDataRight.removeAll()
+//                newListLandmarkRightY.removeAll()
+//            }
             
             let faceLeft = face.contour(ofType: .leftEyebrowTop)
             let minYEyeLeft = getMinPointF(contour: faceLeft)
@@ -708,8 +708,8 @@ extension EkycView {
             }
             
             print("BienNT Log Detect newListDataRight =  \(newListDataRight) newListDataLeft = \(newListDataLeft) isFaceStraight = \(isFaceStraight)")
-            
-        }
+//
+//        }
         
         var newData: [String: [Float]] = [:]
         newData[DataType.EYE_LEFT.rawValue] = newListDataLeft
@@ -722,35 +722,35 @@ extension EkycView {
     }
     
     private func validateEyes(landmarkFaceY: [Float]?, landmarkEyeLeftY: [Float]?, landmarkEyeRightY: [Float]?) -> Bool {
-        
-        if let fY = landmarkFaceY, !fY.isEmpty, let lY = landmarkEyeLeftY, !lY.isEmpty, let rY = landmarkEyeRightY, !rY.isEmpty{
-            let fy = getAmplitude(listCheck: fY)
-            let ly = getAmplitude(listCheck: lY)
-            let ry = getAmplitude(listCheck: rY)
-            if(fy < 8 && ly < 6  && ry < 6){
-                return true
-            }
-            
-            return false
-        }
-        
-        return false
+        return true
+//        if let fY = landmarkFaceY, !fY.isEmpty, let lY = landmarkEyeLeftY, !lY.isEmpty, let rY = landmarkEyeRightY, !rY.isEmpty{
+//            let fy = getAmplitude(listCheck: fY)
+//            let ly = getAmplitude(listCheck: lY)
+//            let ry = getAmplitude(listCheck: rY)
+//            if(fy < 8 && ly < 6  && ry < 6){
+//                return true
+//            }
+//
+//            return false
+//        }
+//
+//        return false
         
     }
     
     private func checkBlinkingEyes(listDataLeft: [Float]?, listDataRight: [Float]?) -> Bool{
-        if let l = listDataLeft, !l.isEmpty, l.count >= 2, let r = listDataRight, !r.isEmpty, r.count >= 2{
-            let decLeft = decCheck(listData: l)
-            let decRight = decCheck(listData: r)
-            
-            if(decLeft && decRight){
+        if let l = listDataLeft, !l.isEmpty, l.count >= 3, let r = listDataRight, !r.isEmpty, r.count >= 3{
+//            let decLeft = decCheck(listData: l)
+//            let decRight = decCheck(listData: r)
+//
+//            if(decLeft && decRight){
                 let newLeft = sortDEC(listData: l)
                 let newRight = sortDEC(listData: r)
                 
-                if(newLeft[0] > 0.7 && newLeft[newLeft.count - 1 ] < 0.2 && newRight[0] > 0.7 && newRight[newRight.count - 1] < 0.2){
+                if(newLeft[0] > 0.6 && newLeft[newLeft.count - 1 ] < 0.2 && newRight[0] > 0.6 && newRight[newRight.count - 1] < 0.2){
                     return true
                 }
-            }
+//            }
             
             
             return false
@@ -779,25 +779,25 @@ extension EkycView {
         print("BienNT Log Detect addDataSmiling  newListData =  \(newListData)")
         
         let smilingProbability = face.smilingProbability
-        let isFaceStraight = checkFaceStraight(face: face)
-        let isASC = ascCheck(listData: newListData)
-        
-        
-        print("BienNT Log Detect addDataSmiling  smilingProbability =  \(smilingProbability) isFaceStraight = \(isFaceStraight) isASC = \(isASC)")
-
-        if(!isASC){
-            newListData.removeAll()
-            newMouthBottomLeftX.removeAll()
-            newMouthBottomLeftY.removeAll()
-        }
-        
-        if(isFaceStraight){
-            if(newListData.count > 0 && Float(smilingProbability) < newListData[newListData.count - 1]){
-                newListData.removeAll()
-                newMouthBottomLeftX.removeAll()
-                newMouthBottomLeftY.removeAll()
-            }
-            
+//        let isFaceStraight = checkFaceStraight(face: face)
+//        let isASC = ascCheck(listData: newListData)
+//
+//
+//        print("BienNT Log Detect addDataSmiling  smilingProbability =  \(smilingProbability) isFaceStraight = \(isFaceStraight) isASC = \(isASC)")
+//
+//        if(!isASC){
+//            newListData.removeAll()
+//            newMouthBottomLeftX.removeAll()
+//            newMouthBottomLeftY.removeAll()
+//        }
+//
+//        if(isFaceStraight){
+//            if(newListData.count > 0 && Float(smilingProbability) < newListData[newListData.count - 1]){
+//                newListData.removeAll()
+//                newMouthBottomLeftX.removeAll()
+//                newMouthBottomLeftY.removeAll()
+//            }
+//
             newListData.append(Float(smilingProbability))
             print("BienNT Log Detect addDataSmiling  newListData =  \(newListData)")
             
@@ -816,12 +816,12 @@ extension EkycView {
                 newMouthBottomLeftX.append(Float(x))
                 newMouthBottomLeftY.append(Float(y))
             }
-        }else{
-            newListData.removeAll()
-            newMouthBottomLeftX.removeAll()
-            newMouthBottomLeftY.removeAll()
-        }
-        
+//        }else{
+//            newListData.removeAll()
+//            newMouthBottomLeftX.removeAll()
+//            newMouthBottomLeftY.removeAll()
+//        }
+//
         var newData : [String: [Float]] = [:]
         newData[DataType.SMILE.rawValue] = newListData
         newData[DataType.MOUTH_X.rawValue] = newMouthBottomLeftX
@@ -831,28 +831,29 @@ extension EkycView {
     }
     
     private func validateChangeMouth(listMouthBottomLeftX: [Float]?, listMouthBottomLeftY: [Float]?) -> Bool{
-        if let mX = listMouthBottomLeftX, !mX.isEmpty , let mY = listMouthBottomLeftY, !mY.isEmpty {
-            let lx = getAmplitude(listCheck: mX)
-            let ly = getAmplitude(listCheck: mY)
-            if(lx < 5 && ly < 5 && ly > 1.5){
-                return true
-            }
-            
-            return false
-        }
-        
-        return false
+        return true
+//        if let mX = listMouthBottomLeftX, !mX.isEmpty , let mY = listMouthBottomLeftY, !mY.isEmpty {
+//            let lx = getAmplitude(listCheck: mX)
+//            let ly = getAmplitude(listCheck: mY)
+//            if(lx < 5 && ly < 5 && ly > 1.5){
+//                return true
+//            }
+//
+//            return false
+//        }
+//
+//        return false
     }
     
     private func checkSmiling(listData: [Float]?) -> Bool {
         if let data = listData, !data.isEmpty, data.count >= 3 {
-            let isASC = ascCheck(listData: data)
-            if(isASC){
+//            let isASC = ascCheck(listData: data)
+//            if(isASC){
                 let newList = sortASC(listData: data)
-                if(newList[0] <= 0.2 && newList[newList.count - 1] >= 0.6){
+                if(newList[0] <= 0.4 && newList[newList.count - 1] >= 0.8){
                     return true
                 }
-            }
+//            }
             
             return false
         }
@@ -870,13 +871,13 @@ extension EkycView {
         
         print("BienNT Log Detect addFaceTurnRight  newListData =  \(newListData)")
 
-        
-        let isASC = ascCheck(listData: newListData)
-        if(!isASC){
-            newListData.removeAll()
-        }else if(newListData.count > 0 && Float(y) < newListData[newListData.count - 1]){
-            newListData.removeAll()
-        }
+//
+//        let isASC = ascCheck(listData: newListData)
+//        if(!isASC){
+//            newListData.removeAll()
+//        }else if(newListData.count > 0 && Float(y) < newListData[newListData.count - 1]){
+//            newListData.removeAll()
+//        }
         
         newListData.append(Float(y))
         print("BienNT Log Detect addFaceTurnRight  newListData =  \(newListData)")
@@ -889,15 +890,15 @@ extension EkycView {
     
     private func checkFaceTurnRight(listData: [Float]?) -> Bool{
         if let data = listData, !data.isEmpty{
-            let isASC = ascCheck(listData: data)
-            if(isASC){
+//            let isASC = ascCheck(listData: data)
+//            if(isASC){
                 let newData = sortASC(listData: data)
                 print("BienNT Log Detect addFaceTurnRight  newData =  \(newData)")
 
-                if(newData[0] <= 10 &&  newData[newData.count - 1] > 40){
+                if(newData[0] <= 10 &&  newData[newData.count - 1] > 30){
                     return true
                 }
-            }
+//            }
             return false
         }
         
@@ -913,12 +914,12 @@ extension EkycView {
         
         print("BienNT Log Detect addFaceTurnLeft  newListData =  \(newListData)")
 
-        let isDEC = decCheck(listData: newListData)
-        if(!isDEC){
-            newListData.removeAll()
-        }else if(newListData.count > 0 && Float(y) > newListData[newListData.count - 1]){
-            newListData.removeAll()
-          }
+//        let isDEC = decCheck(listData: newListData)
+//        if(!isDEC){
+//            newListData.removeAll()
+//        }else if(newListData.count > 0 && Float(y) > newListData[newListData.count - 1]){
+//            newListData.removeAll()
+//          }
         
         newListData.append(Float(y))
         print("BienNT Log Detect addFaceTurnLeft  newListData =  \(newListData)")
@@ -932,15 +933,15 @@ extension EkycView {
     
     private func checkFaceTurnLeft(listData: [Float]?) -> Bool{
         if let data = listData, !data.isEmpty{
-            let isDEC = decCheck(listData: data)
-            if(isDEC){
+//            let isDEC = decCheck(listData: data)
+//            if(isDEC){
                 let newData = sortDEC(listData: data)
                 print("BienNT Log Detect addFaceTurnLeft  newData =  \(newData)")
 
-                if(newData[0] >= -10  && newData[newData.count - 1] < -40){
+                if(newData[0] >= -10  && newData[newData.count - 1] < -30){
                     return true
                 }
-            }
+//            }
             
             return false
         }
