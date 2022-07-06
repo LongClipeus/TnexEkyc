@@ -1,5 +1,6 @@
 package com.tnex.ekyc.tnexekyc
 
+import android.app.Activity
 import android.content.Context
 import android.util.Log
 import androidx.annotation.NonNull
@@ -22,6 +23,7 @@ class TnexekycPlugin: FlutterPlugin, MethodCallHandler, ActivityAware, EkycListe
   /// when the Flutter Engine is detached from the Activity
   private lateinit var channel : MethodChannel
   private lateinit var context: Context
+  private lateinit var activity: Activity
   private lateinit var eventEkycChannel: EventChannel
   private lateinit var eventCaptureChannel: EventChannel
   private lateinit var flutterPluginBinding : FlutterPlugin.FlutterPluginBinding
@@ -61,10 +63,9 @@ class TnexekycPlugin: FlutterPlugin, MethodCallHandler, ActivityAware, EkycListe
         result.success(null)
       }else{
         if(quality == null){
-          quality = 1;
+          quality = 3
         }
-
-        CompressVideo().getBitmap(path, quality, context, object  : CompressVideoListener {
+        CompressVideo().compressVideo(path, quality, activity, object  : CompressVideoListener {
           override fun onCompleted(imagePath: String) {
             result.success(imagePath)
           }
@@ -85,6 +86,7 @@ class TnexekycPlugin: FlutterPlugin, MethodCallHandler, ActivityAware, EkycListe
   }
 
   override fun onAttachedToActivity(binding: ActivityPluginBinding) {
+    activity = binding.activity
     cameraFactory?.onStartEkyc() ?: run {
       cameraFactory = CameraFactory(binding.activity, this@TnexekycPlugin)
       flutterPluginBinding

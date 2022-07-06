@@ -109,6 +109,7 @@ class _HomeAppState extends State<HomeApp> {
 
       if(mediaPath != null && mediaPath.isNotEmpty){
         videoSize = await getFileSize(mediaPath);
+
         debugPrint("addKYCDocument videoNewSize = $videoSize");
       }
     }catch(err){

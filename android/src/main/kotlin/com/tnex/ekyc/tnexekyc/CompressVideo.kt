@@ -1,19 +1,22 @@
 package com.tnex.ekyc.tnexekyc
 
+import android.Manifest
+import android.app.Activity
 import android.content.Context
-import android.graphics.Bitmap
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.util.Log
-import androidx.camera.core.ImageProxy
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import com.otaliastudios.transcoder.Transcoder
 import com.otaliastudios.transcoder.TranscoderListener
+import com.otaliastudios.transcoder.common.TrackType
 import com.otaliastudios.transcoder.source.UriDataSource
-import com.otaliastudios.transcoder.strategy.DefaultAudioStrategy
 import com.otaliastudios.transcoder.strategy.DefaultVideoStrategy
-import com.otaliastudios.transcoder.strategy.RemoveTrackStrategy
 import com.otaliastudios.transcoder.strategy.TrackStrategy
 import java.io.File
-import java.util.*
+
 
 interface CompressVideoListener {
     fun onCompleted(imagePath: String)
@@ -22,10 +25,29 @@ interface CompressVideoListener {
 
 class CompressVideo
 {
-    fun getBitmap(path: String, quality: Int, context: Context, listener: CompressVideoListener) {
-        val frameRate = 30
-        val tempDir: String = context.getExternalFilesDir("video_compress")!!.absolutePath
-        val destPath: String = tempDir + File.separator + "VID_" + System.currentTimeMillis() + path.hashCode() + ".mp4"
+    fun compressVideo(path: String, quality: Int,   activity: Activity, listener: CompressVideoListener) {
+        val permissions = arrayOf(
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
+        )
+
+        if (!hasPermissions(activity, permissions)) {
+            ActivityCompat.requestPermissions(
+                activity,
+                permissions,
+                1
+            )
+            compress(path, quality, activity, listener, 0)
+        } else {
+            compress(path, quality, activity, listener, 0)
+        }
+
+    }
+
+    private fun compress(path: String, quality: Int, context: Context, listener: CompressVideoListener, retry:Int){
+        val sdCardRoot = context.filesDir.absolutePath
+//        val tempDir: String = context.getExternalFilesDir("video_compress")!!.absolutePath
+        val destPath: String = sdCardRoot + File.separator + System.currentTimeMillis() + path.hashCode() + ".mp4"
         var videoTrackStrategy: TrackStrategy = DefaultVideoStrategy.atMost(340).build();
         when (quality) {
             0 -> {
@@ -41,7 +63,7 @@ class CompressVideo
                 videoTrackStrategy = DefaultVideoStrategy.Builder()
                     .keyFrameInterval(3f)
                     .bitRate(1280 * 720 * 4.toLong())
-                    .frameRate(frameRate) // will be capped to the input frameRate
+                    .frameRate(30) // will be capped to the input frameRate
                     .build()
             }
             4 -> {
@@ -58,33 +80,57 @@ class CompressVideo
             }
         }
 
-        val audioTrackStrategy = RemoveTrackStrategy()
-
         val dataSource = UriDataSource(context, Uri.parse(path))
+        Log.i("updateProgress", "addKYCDocument dataSource = $dataSource")
         Transcoder.into(destPath)
-            .addDataSource(dataSource)
-            .setAudioTrackStrategy(audioTrackStrategy)
+            .addDataSource(TrackType.VIDEO, dataSource)
+            //.setAudioTrackStrategy(audioTrackStrategy)
             .setVideoTrackStrategy(videoTrackStrategy)
             .setListener(object : TranscoderListener {
                 override fun onTranscodeProgress(progress: Double) {
-                    Log.i("updateProgress", "updateProgress = " + progress * 100.00)
+                    Log.i("updateProgress", "addKYCDocument updateProgress = " + progress * 100.00)
                 }
                 override fun onTranscodeCompleted(successCode: Int) {
-                    Log.i("updateProgress", "destPath = " + destPath)
-                    listener.onCompleted(destPath)
+                    Log.i("updateProgress", "addKYCDocument destPath = $destPath")
+                    if(successCode == Transcoder.SUCCESS_NOT_NEEDED){
+                        Log.i("updateProgress", "addKYCDocument SUCCESS_NOT_NEEDED retry = $retry")
+                        if(retry >= 3){
+                            listener.onFailed()
+                        }else{
+                            compress(path, quality, context, listener, retry + 1)
+                        }
+                    }else{
+                        listener.onCompleted(destPath)
+                    }
                 }
 
                 override fun onTranscodeCanceled() {
-                    Log.i("updateProgress", "onTranscodeCanceled")
+                    Log.i("updateProgress", "addKYCDocument onTranscodeCanceled")
                     listener.onFailed()
                 }
 
                 override fun onTranscodeFailed(exception: Throwable) {
-                    Log.i("updateProgress", "onTranscodeFailed")
-
+                    Log.i("updateProgress", "addKYCDocument onTranscodeFailed")
                     listener.onFailed()
                 }
             }).transcode()
+    }
 
+    private fun hasPermissions(
+        context: Context?,
+        permissions: Array<String>
+    ): Boolean {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && context != null) {
+            for (permission in permissions) {
+                if (ContextCompat.checkSelfPermission(
+                        context,
+                        permission
+                    ) != PackageManager.PERMISSION_GRANTED
+                ) {
+                    return false
+                }
+            }
+        }
+        return true
     }
 }
