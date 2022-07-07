@@ -95,7 +95,7 @@ class EkycView: UIView {
         options.landmarkMode = .all
         options.contourMode = .all
         options.classificationMode = .all
-        options.performanceMode = .accurate
+        options.performanceMode = .fast
         options.isTrackingEnabled = true
         let faceDetector = FaceDetector.faceDetector(options: options)
         var faces: [Face]
@@ -117,7 +117,8 @@ class EkycView: UIView {
                 self.clearDetectData()
                 return
             }
-            let epsilon = (width - strongSelf.frame.width)/2
+//            let epsilon = (width - strongSelf.frame.width)/2
+            let epsilon = 0
             var facesDetect : [Face] = []
             for face in faces {
                 if(face.hasTrackingID){
