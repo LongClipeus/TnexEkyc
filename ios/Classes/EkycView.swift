@@ -70,6 +70,7 @@ class EkycView: UIView {
     
     override func willMove(toSuperview newSuperview: UIView?) {
         super.willMove(toSuperview: newSuperview)
+        print("BienNT willMove")
         self.backgroundColor = .black
         previewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
         previewLayer.videoGravity = AVLayerVideoGravity.resizeAspectFill
@@ -85,7 +86,8 @@ class EkycView: UIView {
     
     override func layoutSubviews() {
         super.layoutSubviews()
-        //previewLayer.bounds = bounds
+        print("BienNT layoutSubviews")
+        previewLayer.bounds = bounds
     }
     
     private func detectFacesOnDevice(in image: VisionImage, width: CGFloat, height: CGFloat, photoData: PhotoData) {
@@ -296,13 +298,14 @@ class EkycView: UIView {
         weak var weakSelf = self
         DispatchQueue.main.sync {
             guard let strongSelf = weakSelf else {
-                print("Self is nil!")
+                print("BienNT updatePreviewOverlayViewWithLastFrame Self is nil!")
                 return
             }
             
             guard let lastFrame = lastFrame,
                   let imageBuffer = CMSampleBufferGetImageBuffer(lastFrame)
             else {
+                print("BienNT updatePreviewOverlayViewWithLastFrame lastFrame is nil or imageBuffer is nil")
                 return
             }
             strongSelf.updatePreviewOverlayViewWithImageBuffer(imageBuffer)
@@ -311,12 +314,18 @@ class EkycView: UIView {
     }
     
     private func updatePreviewOverlayViewWithImageBuffer(_ imageBuffer: CVImageBuffer?) {
-        guard let imageBuffer = imageBuffer else {
+        print("BienNT updatePreviewOverlayViewWithImageBuffer")
+
+        
+        guard let newImageBuffer = imageBuffer else {
+            print("BienNT updatePreviewOverlayViewWithImageBuffer imageBuffer nil")
             return
         }
         let orientation: UIImage.Orientation = isUsingFrontCamera ? .leftMirrored : .right
-        let image = UIConstants.createNewUIImage(from: imageBuffer, orientation: orientation, width: frame.width, height: frame.height)
+        let image = UIConstants.createNewUIImage(from: newImageBuffer, orientation: orientation, width: frame.width, height: frame.height)
         
+        print("BienNT updatePreviewOverlayViewWithImageBuffer image = \(String(describing: image))")
+
         previewOverlayView.image = image
     }
     
@@ -1095,12 +1104,13 @@ extension EkycView {
             
             if (videoWriter.canAdd(videoWriterInput)) {
                 videoWriter.add(videoWriterInput)
-                print("video input added")
+                print("BienNT video input added")
             } else {
-                print("no input added")
+                print("BienNT. no input added")
             }
             videoWriter.startWriting()
         } catch let error {
+            print("BienNT recoder err error \(error.localizedDescription)")
             debugPrint(error.localizedDescription)
         }
     }
@@ -1208,23 +1218,30 @@ extension EkycView {
     
     // MARK: Start recording
     private func startRecordVideo() {
-        guard !isRecording else { return }
+        guard !isRecording else {
+            print("BienNT startRecordVideo isRecording true")
+            return
+        }
+        
+        print("BienNT startRecordVideo isRecording false")
         isRecording = true
         sessionAtSourceTime = nil
         setUpWriter()
-        guard let videoWriter = videoWriter else { return }
-        print(isRecording)
-        print(videoWriter)
+        guard let videoWriter = videoWriter else {
+            print("BienNT startRecordVideo videoWriter  null")
+            return
+        }
+        print("BienNT startRecordVideo isRecording = \(isRecording)")
         if videoWriter.status == .writing {
-            print("status writing")
+            print("BienNT startRecordVideo status writing")
         } else if videoWriter.status == .failed {
-            print("status failed")
+            print("BienNT startRecordVideo status failed")
         } else if videoWriter.status == .cancelled {
-            print("status cancelled")
+            print("BienNT startRecordVideo status cancelled")
         } else if videoWriter.status == .unknown {
-            print("status unknown")
+            print("BienNT startRecordVideo status unknown")
         } else {
-            print("status completed")
+            print("BienNT startRecordVideo status completed")
         }
     }
     
