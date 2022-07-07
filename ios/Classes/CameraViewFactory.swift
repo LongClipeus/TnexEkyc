@@ -121,7 +121,7 @@ class CameraNativeView: NSObject, FlutterPlatformView {
         onError: @escaping (String)->()
     ) {
         _view = UIView()
-        _view.backgroundColor = UIColor.red
+        _view.backgroundColor = UIColor.black
         super.init()
         // iOS views can be created here
     

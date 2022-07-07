@@ -70,8 +70,7 @@ class EkycView: UIView {
     
     override func willMove(toSuperview newSuperview: UIView?) {
         super.willMove(toSuperview: newSuperview)
-        print("BienNT willMoveToSuperview")
-        self.backgroundColor = .green
+        self.backgroundColor = .black
         previewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
         previewLayer.videoGravity = AVLayerVideoGravity.resizeAspectFill
         previewLayer.frame = bounds
@@ -133,17 +132,17 @@ class EkycView: UIView {
                     ).standardized
                     
                     print("BienNT standardizedRect \(standardizedRect.origin.x) \(standardizedRect.origin.y)")
-                    let h = standardizedRect.origin.y + standardizedRect.size.height
-                    let w = standardizedRect.origin.x + standardizedRect.size.width
-                    
-                    if(standardizedRect.origin.y >= 0 && standardizedRect.origin.x >= 0 && h < frame.height && w < frame.width){
+//                    let h = standardizedRect.origin.y + standardizedRect.size.height
+//                    let w = standardizedRect.origin.x + standardizedRect.size.width
+//
+//                    if(standardizedRect.origin.y >= 0 && standardizedRect.origin.x >= 0 && h < frame.height && w < frame.width){
                         facesDetect.append(face)
                         UIConstants.addRectangle(
                             standardizedRect,
                             to: strongSelf.annotationOverlayView,
                             color: UIColor.white
                         )
-                    }
+//                    }
                 }
             }
             strongSelf.detect(faces: facesDetect, photoData: photoData)
