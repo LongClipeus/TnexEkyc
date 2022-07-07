@@ -87,11 +87,11 @@ class EkycView: UIView {
     override func layoutSubviews() {
         super.layoutSubviews()
         print("BienNT layoutSubviews")
-        previewLayer.bounds = bounds
         self.backgroundColor = .black
         previewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
         previewLayer.videoGravity = AVLayerVideoGravity.resizeAspectFill
         previewLayer.frame = bounds
+        previewLayer.bounds = bounds
         previewLayer.position = CGPoint(x: bounds.midX, y: bounds.midY)
         previewLayer.connection?.videoOrientation = .portrait
         
