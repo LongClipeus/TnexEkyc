@@ -235,14 +235,20 @@ class EkycView: UIView {
     }
     
     private func stopSession() {
+        print("BienNT EkycView stopDetection stopSession");
+
         weak var weakSelf = self
         sessionQueue.async {
             guard let strongSelf = weakSelf else {
-                print("Self is nil!")
+                print("BienNT EkycView stopDetection stopSession Self nil");
                 return
             }
             if strongSelf.captureSession.isRunning {
+                print("BienNT EkycView stopDetection stopSession captureSession isRunning true");
+
                 strongSelf.captureSession.stopRunning()
+            }else{
+                print("BienNT EkycView stopDetection stopSession captureSession isRunning false");
             }
         }
     }
@@ -468,6 +474,8 @@ extension EkycView {
     }
     
     func stopDetection(){
+        print("BienNT EkycView stopDetection");
+
         isStopDetection = true
         self.timerTimeout.invalidate()
         stopRecordVideo()
@@ -1222,13 +1230,28 @@ extension EkycView {
     
     // MARK: Stop recording
     private func stopRecordVideo() {
-        guard isRecording else { return }
+        print("BienNT EkycView stopRecordVideo");
+
+        guard isRecording else {
+            print("BienNT EkycView stopRecordVideo isRecording false");
+            return
+        }
+        print("BienNT EkycView stopRecordVideo isRecording true");
         isRecording = false
-        guard let videoWriter = videoWriter, let videoWriterInput = videoWriterInput else { return }
+        guard let videoWriter = videoWriter, let videoWriterInput = videoWriterInput else {
+            print("BienNT EkycView stopRecordVideo videoWriter null || videoWriterInput null");
+
+            return
+        }
         videoWriterInput.markAsFinished()
-        print("marked as finished")
+        print("BienNT EkycView stopRecordVideo  marked as finished")
         videoWriter.finishWriting { [weak self] in
-            guard let weakSelf = self else { return }
+            guard let weakSelf = self else {
+                print("BienNT EkycView stopRecordVideo  self null")
+                return
+            }
+            
+            print("BienNT EkycView stopRecordVideo  sessionAtSourceTime null")
             weakSelf.sessionAtSourceTime = nil
         }
         //print("finished writing \(self.outputFileLocation)")

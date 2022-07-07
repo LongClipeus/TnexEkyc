@@ -46,7 +46,11 @@ class EkycViewFactory: NSObject, FlutterPlatformViewFactory, FlutterStreamHandle
     }
     
     func stopDetection(){
+        print("BienNT EkycViewFactory stopDetection");
+
         guard let camera = nativeView else {
+            print("BienNT EkycViewFactory camera null");
+
             return
         }
         

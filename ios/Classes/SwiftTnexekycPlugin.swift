@@ -28,7 +28,10 @@ public class SwiftTnexekycPlugin: NSObject, FlutterPlugin {
             factoryView.startDetection()
             break
         case "onStopEkyc":
+            print("BienNT FlutterMethodCall onStopEkyc");
+
             guard let factoryView = SwiftTnexekycPlugin.factoryEkyc else {
+                print("BienNT FlutterMethodCall SwiftTnexekycPlugin.factoryEkyc null");
                 return
             }
             factoryView.stopDetection()
