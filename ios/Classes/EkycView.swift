@@ -71,23 +71,34 @@ class EkycView: UIView {
     override func willMove(toSuperview newSuperview: UIView?) {
         super.willMove(toSuperview: newSuperview)
         print("BienNT willMove")
-        self.backgroundColor = .black
-        previewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
-        previewLayer.videoGravity = AVLayerVideoGravity.resizeAspectFill
-        previewLayer.frame = self.frame
+//        self.backgroundColor = .black
+//        previewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
+//        previewLayer.videoGravity = AVLayerVideoGravity.resizeAspectFill
+//        previewLayer.frame = bounds
 //        previewLayer.position = CGPoint(x: bounds.midX, y: bounds.midY)
 //        previewLayer.connection?.videoOrientation = .portrait
-        
-        setUpPreviewOverlayView()
-        setUpAnnotationOverlayView()
-        setUpCaptureSessionOutput()
-        setUpCaptureSessionInput()
+//
+//        setUpPreviewOverlayView()
+//        setUpAnnotationOverlayView()
+//        setUpCaptureSessionOutput()
+//        setUpCaptureSessionInput()
     }
     
     override func layoutSubviews() {
         super.layoutSubviews()
         print("BienNT layoutSubviews")
         previewLayer.bounds = bounds
+        self.backgroundColor = .black
+        previewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
+        previewLayer.videoGravity = AVLayerVideoGravity.resizeAspectFill
+        previewLayer.frame = bounds
+        previewLayer.position = CGPoint(x: bounds.midX, y: bounds.midY)
+        previewLayer.connection?.videoOrientation = .portrait
+        
+        setUpPreviewOverlayView()
+        setUpAnnotationOverlayView()
+        setUpCaptureSessionOutput()
+        setUpCaptureSessionInput()
         
         if(!isStartDetection){
             isStartDetection = true
