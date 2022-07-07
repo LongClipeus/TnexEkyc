@@ -10,6 +10,7 @@ import AVFoundation
 
 class CameraView: UIView, AVCapturePhotoCaptureDelegate {
     private let photoOutput = AVCapturePhotoOutput()
+    private var isStartCamera = false
     private let captureSession = AVCaptureSession()
     private var onError:((String) -> ())? = nil
     private var onResults:((String) -> ())? = nil
@@ -22,7 +23,6 @@ class CameraView: UIView, AVCapturePhotoCaptureDelegate {
     override func didMoveToSuperview() {
         super.didMoveToSuperview()
         print("BienNT didMoveToSuperview")
-        startCamera()
     }
     
     override func willMove(toSuperview newSuperview: UIView?) {
@@ -33,8 +33,10 @@ class CameraView: UIView, AVCapturePhotoCaptureDelegate {
     override func layoutSubviews() {
         super.layoutSubviews()
         print("BienNT layoutSubviews")
-        print("layoutSubviews bounds = \(bounds)")
-        print("layoutSubviews frame = \(frame)")
+        if(!isStartCamera){
+            isStartCamera = true
+            startCamera()
+        }
     }
     
     

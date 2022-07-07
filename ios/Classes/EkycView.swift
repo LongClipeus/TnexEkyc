@@ -41,6 +41,7 @@ class EkycView: UIView {
     fileprivate var videoWriter: AVAssetWriter?
     fileprivate var videoWriterInput: AVAssetWriterInput?
     fileprivate var sessionAtSourceTime: CMTime?
+    private var isStartDetection = false
     
     private lazy var previewOverlayView: UIImageView = {
         precondition(true)
@@ -65,7 +66,6 @@ class EkycView: UIView {
     override func didMoveToSuperview() {
         super.didMoveToSuperview()
         print("BienNT didMoveToSuperview")
-        startDetection()
     }
     
     override func willMove(toSuperview newSuperview: UIView?) {
@@ -74,9 +74,9 @@ class EkycView: UIView {
         self.backgroundColor = .black
         previewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
         previewLayer.videoGravity = AVLayerVideoGravity.resizeAspectFill
-        previewLayer.frame = bounds
-        previewLayer.position = CGPoint(x: bounds.midX, y: bounds.midY)
-        previewLayer.connection?.videoOrientation = .portrait
+        previewLayer.frame = self.frame
+//        previewLayer.position = CGPoint(x: bounds.midX, y: bounds.midY)
+//        previewLayer.connection?.videoOrientation = .portrait
         
         setUpPreviewOverlayView()
         setUpAnnotationOverlayView()
@@ -88,6 +88,11 @@ class EkycView: UIView {
         super.layoutSubviews()
         print("BienNT layoutSubviews")
         previewLayer.bounds = bounds
+        
+        if(!isStartDetection){
+            isStartDetection = true
+            startDetection()
+        }
     }
     
     private func detectFacesOnDevice(in image: VisionImage, width: CGFloat, height: CGFloat, photoData: PhotoData) {
