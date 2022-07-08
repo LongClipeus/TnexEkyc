@@ -128,7 +128,7 @@ class EkycView: UIView {
                 self.clearDetectData()
                 return
             }
-            let epsilon1 = (width - strongSelf.frame.width)/2
+            let epsilon1 = (width - strongSelf.frame.width)/8
             let epsilon = 0
             var facesDetect : [Face] = []
             for face in faces {
