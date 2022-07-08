@@ -63,11 +63,14 @@ PODS:
     - Flutter
     - GoogleMLKit/FaceDetection (~> 2.6.0)
     - MLKitVision
+  - video_player (0.0.1):
+    - Flutter
 
 DEPENDENCIES:
   - Flutter (from `Flutter`)
   - permission_handler (from `.symlinks/plugins/permission_handler/ios`)
   - tnexekyc (from `.symlinks/plugins/tnexekyc/ios`)
+  - video_player (from `.symlinks/plugins/video_player/ios`)
 
 SPEC REPOS:
   trunk:
@@ -92,6 +95,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/permission_handler/ios"
   tnexekyc:
     :path: ".symlinks/plugins/tnexekyc/ios"
+  video_player:
+    :path: ".symlinks/plugins/video_player/ios"
 
 SPEC CHECKSUMS:
   Flutter: 50d75fe2f02b26cc09d224853bb45737f8b3214a
@@ -110,6 +115,7 @@ SPEC CHECKSUMS:
   PromisesObjC: 99b6f43f9e1044bd87a95a60beff28c2c44ddb72
   Protobuf: b60ec2f51ad74765f44d0c09d2e0579d7de21745
   tnexekyc: 5fb02802b2443465ac7718ab3132325792dc6b88
+  video_player: 7e9dad9437c238a97648819f6dd443c8854cf0c7
 
 PODFILE CHECKSUM: 88b97f9867815d9aa81b768b535cdf0b08e94a30
 

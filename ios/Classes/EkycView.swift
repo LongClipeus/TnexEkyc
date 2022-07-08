@@ -42,6 +42,7 @@ class EkycView: UIView {
     fileprivate var videoWriterInput: AVAssetWriterInput?
     fileprivate var sessionAtSourceTime: CMTime?
     private var isStartDetection = false
+    private var isCreateView = false
     
     private lazy var previewOverlayView: UIImageView = {
         precondition(true)
@@ -71,34 +72,26 @@ class EkycView: UIView {
     override func willMove(toSuperview newSuperview: UIView?) {
         super.willMove(toSuperview: newSuperview)
         print("BienNT willMove")
-//        self.backgroundColor = .black
-//        previewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
-//        previewLayer.videoGravity = AVLayerVideoGravity.resizeAspectFill
-//        previewLayer.frame = bounds
-//        previewLayer.position = CGPoint(x: bounds.midX, y: bounds.midY)
-//        previewLayer.connection?.videoOrientation = .portrait
-//
-//        setUpPreviewOverlayView()
-//        setUpAnnotationOverlayView()
-//        setUpCaptureSessionOutput()
-//        setUpCaptureSessionInput()
+        if(!isCreateView){
+            isCreateView = true
+            self.backgroundColor = .black
+            previewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
+            previewLayer.videoGravity = AVLayerVideoGravity.resizeAspectFill
+            previewLayer.frame = bounds
+            previewLayer.bounds = bounds
+            previewLayer.position = CGPoint(x: bounds.midX, y: bounds.midY)
+            previewLayer.connection?.videoOrientation = .portrait
+            
+            setUpPreviewOverlayView()
+            setUpAnnotationOverlayView()
+            setUpCaptureSessionOutput()
+            setUpCaptureSessionInput()
+        }
     }
     
     override func layoutSubviews() {
         super.layoutSubviews()
         print("BienNT layoutSubviews")
-        self.backgroundColor = .black
-        previewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
-        previewLayer.videoGravity = AVLayerVideoGravity.resizeAspectFill
-        previewLayer.frame = bounds
-        previewLayer.bounds = bounds
-        previewLayer.position = CGPoint(x: bounds.midX, y: bounds.midY)
-        previewLayer.connection?.videoOrientation = .portrait
-        
-        setUpPreviewOverlayView()
-        setUpAnnotationOverlayView()
-        setUpCaptureSessionOutput()
-        setUpCaptureSessionInput()
         
         if(!isStartDetection){
             isStartDetection = true
@@ -332,7 +325,6 @@ class EkycView: UIView {
     private func updatePreviewOverlayViewWithImageBuffer(_ imageBuffer: CVImageBuffer?) {
         print("BienNT updatePreviewOverlayViewWithImageBuffer")
 
-        
         guard let newImageBuffer = imageBuffer else {
             print("BienNT updatePreviewOverlayViewWithImageBuffer imageBuffer nil")
             return

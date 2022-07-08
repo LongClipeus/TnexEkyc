@@ -11,6 +11,7 @@ import AVFoundation
 class CameraView: UIView, AVCapturePhotoCaptureDelegate {
     private let photoOutput = AVCapturePhotoOutput()
     private var isStartCamera = false
+    private var isCreateView = false
     private let captureSession = AVCaptureSession()
     private var onError:((String) -> ())? = nil
     private var onResults:((String) -> ())? = nil
@@ -28,6 +29,10 @@ class CameraView: UIView, AVCapturePhotoCaptureDelegate {
     override func willMove(toSuperview newSuperview: UIView?) {
         super.willMove(toSuperview: newSuperview)
         print("BienNT willMoveToSuperview")
+        if(!isCreateView){
+            isCreateView = true
+            setupCaptureSession()
+        }
     }
     
     override func layoutSubviews() {
@@ -143,7 +148,7 @@ class CameraView: UIView, AVCapturePhotoCaptureDelegate {
     }
     
     func startCamera(){
-        setupCaptureSession()
+        //setupCaptureSession()
         captureSession.startRunning()
     }
 
