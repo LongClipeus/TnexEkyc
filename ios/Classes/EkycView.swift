@@ -136,7 +136,7 @@ class EkycView: UIView {
                     let normalizedRect = CGRect(
                         x: (face.frame.origin.x + CGFloat(epsilon)) / width,
                         y: face.frame.origin.y / height,
-                        width: (face.frame.size.width + CGFloat(epsilon)) / width,
+                        width: (face.frame.size.width + CGFloat(epsilon1)) / width,
                         height: face.frame.size.height / height
                     )
                     let standardizedRect = strongSelf.previewLayer.layerRectConverted(
