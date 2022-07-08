@@ -128,7 +128,7 @@ class EkycView: UIView {
                 self.clearDetectData()
                 return
             }
-//            let epsilon = (width - strongSelf.frame.width)/2
+            let epsilon1 = (width - strongSelf.frame.width)/2
             let epsilon = 0
             var facesDetect : [Face] = []
             for face in faces {
@@ -136,7 +136,7 @@ class EkycView: UIView {
                     let normalizedRect = CGRect(
                         x: (face.frame.origin.x + CGFloat(epsilon)) / width,
                         y: face.frame.origin.y / height,
-                        width: face.frame.size.width / width,
+                        width: (face.frame.size.width + CGFloat(epsilon)) / width,
                         height: face.frame.size.height / height
                     )
                     let standardizedRect = strongSelf.previewLayer.layerRectConverted(
