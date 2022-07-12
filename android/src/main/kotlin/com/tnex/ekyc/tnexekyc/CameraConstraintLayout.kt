@@ -4,13 +4,15 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
-import android.graphics.Bitmap
+import android.graphics.*
+import android.media.Image
 import android.util.AttributeSet
 import android.util.Log
 import androidx.constraintlayout.widget.ConstraintLayout
 import android.util.TypedValue
 import android.widget.Toast
 import androidx.camera.core.*
+import androidx.camera.core.ImageAnalysis.OUTPUT_IMAGE_FORMAT_YUV_420_888
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.video.*
 import androidx.camera.video.VideoCapture
@@ -18,6 +20,7 @@ import androidx.core.util.Consumer
 import androidx.lifecycle.*
 import androidx.lifecycle.Observer
 import com.google.mlkit.common.MlKitException
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -180,6 +183,7 @@ class CameraConstraintLayout(context: Context,
             if (targetResolution != null) {
                 builder.setTargetResolution(targetResolution)
             }
+
             analysisUseCase = builder.build()
 
             needUpdateGraphicOverlayImageSourceInfo = true
@@ -202,19 +206,6 @@ class CameraConstraintLayout(context: Context,
                         }
                         needUpdateGraphicOverlayImageSourceInfo = false
                     }
-
-
-
-//                    imageProcessor!!.drawImageProxy(imageProxy, graphicImage)
-//                    try {
-//                        imageProcessor!!.processImageProxy(imageProxy, graphicOverlay)
-//                        Log.i("FaceDetectorProcessor", "imageProcessor")
-//                    } catch (e: MlKitException) {
-//                        Log.i("FaceDetectorProcessor", "Failed to process image. Error: " + e.localizedMessage)
-//                        Toast.makeText(context, e.localizedMessage, Toast.LENGTH_SHORT).show()
-//                        sendEkycEvent(DetectionEvent.FAILED, null)
-//                    }
-                    //proxyImageProcess(imageProxy)
 
                     proxyImageProcess1(imageProxy)
                 }
@@ -251,6 +242,7 @@ class CameraConstraintLayout(context: Context,
         imageProxy.close()
 
         imageProcessor!!.drawImageBitmap(bitmap, graphicImage)
+
         try {
             imageProcessor!!.processByteBuffer(nv21Buffer, frameMetadata, graphicOverlay)
             Log.i("FaceDetectorProcessor", "imageProcessor")

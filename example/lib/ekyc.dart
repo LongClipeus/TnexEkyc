@@ -93,7 +93,7 @@ class _EkycViewState extends State<EkycView> {
       debugPrint("addKYCDocument newPath =  $newPath");
 
       if(newPath != null && newPath.isNotEmpty){
-        videoSize = await getFileSize(mediaPath);
+        videoSize = await getFileSize(newPath);
         if(videoSize > 0){
           mediaPath = newPath;
         }

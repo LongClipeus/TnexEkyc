@@ -16,9 +16,12 @@
 
 package com.tnex.ekyc.tnexekyc;
 
+import static androidx.core.math.MathUtils.clamp;
+
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.ContentResolver;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.ImageFormat;
@@ -30,6 +33,11 @@ import android.media.Image.Plane;
 import android.net.Uri;
 import android.os.Build.VERSION_CODES;
 import android.provider.MediaStore;
+import android.renderscript.Allocation;
+import android.renderscript.Element;
+import android.renderscript.RenderScript;
+import android.renderscript.ScriptIntrinsicYuvToRGB;
+import android.renderscript.Type;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
@@ -46,7 +54,6 @@ import java.nio.ByteBuffer;
 /** Utils functions for bitmap conversions. */
 public class BitmapUtils {
   private static final String TAG = "BitmapUtils";
-
   /** Converts NV21 format byte buffer to bitmap. */
   @Nullable
   public static Bitmap getBitmap(ByteBuffer data, FrameMetadata metadata) {
@@ -203,6 +210,8 @@ public class BitmapUtils {
 
     if (areUVPlanesNV21(yuv420888planes, width, height)) {
       // Copy the Y values.
+      Log.e(TAG, "areUVPlanesNV21(yuv420888planes, width, height)");
+
       yuv420888planes[0].getBuffer().get(out, 0, imageSize);
 
       ByteBuffer uBuffer = yuv420888planes[1].getBuffer();
@@ -212,6 +221,8 @@ public class BitmapUtils {
       // Copy the first U value and the remaining VU values from the U buffer.
       uBuffer.get(out, imageSize + 1, 2 * imageSize / 4 - 1);
     } else {
+      Log.e(TAG, "else areUVPlanesNV21(yuv420888planes, width, height)");
+
       // Fallback to copying the UV values one by one, which is slower but also works.
       // Unpack Y.
       unpackPlane(yuv420888planes[0], width, height, out, 0, 1);

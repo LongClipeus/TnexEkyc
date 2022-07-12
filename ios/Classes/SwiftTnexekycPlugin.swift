@@ -137,7 +137,7 @@ public class SwiftTnexekycPlugin: NSObject, FlutterPlugin {
         exporter.videoComposition = videoComposition
         exporter.timeRange = timeRange
            
-        UIConstants.deleteFile(compressionUrl.absoluteString)
+        //UIConstants.deleteFile(compressionUrl.absoluteString)
         exporter.exportAsynchronously(completionHandler: {
                result(compressionUrl.path)
            })

@@ -920,7 +920,7 @@ extension EkycView {
                 let newData = sortASC(listData: data)
                 print("BienNT Log Detect addFaceTurnRight  newData =  \(newData)")
 
-                if(newData[0] <= 10 &&  newData[newData.count - 1] > 30){
+                if(newData[0] <= 10 &&  newData[newData.count - 1] > 40){
                     return true
                 }
 //            }
@@ -963,7 +963,7 @@ extension EkycView {
                 let newData = sortDEC(listData: data)
                 print("BienNT Log Detect addFaceTurnLeft  newData =  \(newData)")
 
-                if(newData[0] >= -10  && newData[newData.count - 1] < -30){
+                if(newData[0] >= -10  && newData[newData.count - 1] < -40){
                     return true
                 }
 //            }
