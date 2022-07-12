@@ -87,18 +87,31 @@ public class SwiftTnexekycPlugin: NSObject, FlutterPlugin {
            }
        }
     
-    private func getComposition(_ isIncludeAudio: Bool,_ timeRange: CMTimeRange, _ sourceVideoTrack: AVAssetTrack)->AVAsset {
-            let composition = AVMutableComposition()
-            if !isIncludeAudio {
-                let compressionVideoTrack = composition.addMutableTrack(withMediaType: AVMediaType.video, preferredTrackID: kCMPersistentTrackID_Invalid)
-                compressionVideoTrack!.preferredTransform = sourceVideoTrack.preferredTransform
-                try? compressionVideoTrack!.insertTimeRange(timeRange, of: sourceVideoTrack, at: CMTime.zero)
-            } else {
-                return sourceVideoTrack.asset!
+    private func getComposition(_ isIncludeAudio: Bool,_ timeRange: CMTimeRange, _ sourceVideoTrack: AVAssetTrack?) -> AVAsset? {
+        let composition = AVMutableComposition()
+        guard let videoTrack = sourceVideoTrack else {
+            return nil
+        }
+        
+        if !isIncludeAudio {
+            let compressionVideoTrack = composition.addMutableTrack(withMediaType: AVMediaType.video, preferredTrackID: kCMPersistentTrackID_Invalid)
+            guard let myCompressionvideoTrack = compressionVideoTrack else {
+                return nil
             }
             
-            return composition
+            myCompressionvideoTrack.preferredTransform = videoTrack.preferredTransform
+            do {
+                try myCompressionvideoTrack.insertTimeRange(timeRange, of: videoTrack, at: CMTime.zero)
+                return composition
+            } catch {
+                print("myCompressionvideoTrack.insertTimeRange: \(error)")
+                return nil
+            }
+        } else {
+            return videoTrack.asset ?? nil
         }
+    }
+    
     
     private func compressVideo(_ path: String,_ quality: NSNumber,
                                   _ result: @escaping FlutterResult) {
@@ -124,21 +137,28 @@ public class SwiftTnexekycPlugin: NSObject, FlutterPlugin {
        let timeRange: CMTimeRange = CMTimeRangeMake(start: cmStartTime, duration: cmDurationTime)
        
        
-       let session = getComposition(false, timeRange, sourceVideoTrack!)
-       
-       let exporter = AVAssetExportSession(asset: session, presetName: getExportPreset(quality))!
-       
-       exporter.outputURL = compressionUrl
-       exporter.outputFileType = AVFileType.mp4
-       exporter.shouldOptimizeForNetworkUse = true
+       let session = getComposition(false, timeRange, sourceVideoTrack)
+        guard let mySession = session else {
+            result(nil)
+            return
+        }
+        
+       let exporter = AVAssetExportSession(asset: mySession, presetName: getExportPreset(quality))
+        guard let myExporter = exporter else {
+            result(nil)
+            return
+        }
+        
+        myExporter.outputURL = compressionUrl
+        myExporter.outputFileType = AVFileType.mp4
+        myExporter.shouldOptimizeForNetworkUse = true
            
         let videoComposition = AVMutableVideoComposition(propertiesOf: sourceVideoAsset)
         videoComposition.frameDuration = CMTimeMake(value: 1, timescale: Int32(30))
-        exporter.videoComposition = videoComposition
-        exporter.timeRange = timeRange
-           
+        myExporter.videoComposition = videoComposition
+        myExporter.timeRange = timeRange
         //UIConstants.deleteFile(compressionUrl.absoluteString)
-        exporter.exportAsynchronously(completionHandler: {
+        myExporter.exportAsynchronously(completionHandler: {
                result(compressionUrl.path)
            })
        }
