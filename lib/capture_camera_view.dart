@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
@@ -23,12 +25,34 @@ class CaptureView extends StatefulWidget {
 
 class _CaptureViewState extends State<CaptureView> {
   bool isPermission = false;
+  dynamic eventCapture;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     checkPermission();
+  }
+
+  @override
+  void activate(){
+    super.activate();
+    debugPrint("BienNT CaptureView activate");
+  }
+
+  @override
+  void dispose(){
+    super.dispose();
+    debugPrint("BienNT CaptureView dispose");
+    if(eventCapture != null){
+      eventCapture.cancel();
+    }
+  }
+
+  @override
+  void deactivate(){
+    super.deactivate();
+    debugPrint("BienNT CaptureView deactivate");
   }
 
   Future<void> checkPermission() async {
@@ -40,7 +64,7 @@ class _CaptureViewState extends State<CaptureView> {
         isPermission = true;
       });
 
-      const EventChannel('tnex_capture_listener').receiveBroadcastStream()
+      eventCapture = const EventChannel('tnex_capture_listener').receiveBroadcastStream()
           .listen(captureEvent);
     }else{
       widget.captureError("NO_PERMISSION");

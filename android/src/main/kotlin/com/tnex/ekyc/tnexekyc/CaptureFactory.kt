@@ -12,23 +12,31 @@ class CaptureFactory constructor(
     private val listener: CaptureListener
 ) : PlatformViewFactory(StandardMessageCodec.INSTANCE) {
     private lateinit var captureView: FlutterCaptureView
+    private var isInit = false
 
     override fun create(context: Context, viewId: Int, args: Any?): PlatformView {
         val creationParams = args as Map<*, *>?
         captureView = FlutterCaptureView(activity, context, viewId, creationParams, listener)
+        isInit = true
         return captureView
     }
 
     fun onStopCamera() {
-        captureView.onStopCamera()
+        if(isInit){
+            captureView.onStopCamera()
+        }
     }
 
     fun onStartCamera() {
-        captureView.onStartCamera()
+        if(isInit){
+            captureView.onStartCamera()
+        }
     }
 
     fun onCaptureImage() {
-        captureView.onCaptureImage()
+        if(isInit){
+            captureView.onCaptureImage()
+        }
     }
 
 }

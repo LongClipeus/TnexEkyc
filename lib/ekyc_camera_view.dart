@@ -25,12 +25,37 @@ class CameraView extends StatefulWidget {
 
 class _CameraViewState extends State<CameraView> {
   bool isPermission = false;
+  bool isPauseCamera = false;
+  dynamic eventEkyc;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     checkPermission();
+  }
+
+
+
+  @override
+  void activate(){
+    super.activate();
+    debugPrint("BienNT CaptureView CameraView activate");
+  }
+
+  @override
+  void dispose(){
+    super.dispose();
+    debugPrint("BienNT CaptureView CameraView dispose");
+    if(eventEkyc != null){
+      eventEkyc.cancel();
+    }
+  }
+
+  @override
+  void deactivate(){
+    super.deactivate();
+    debugPrint("BienNT CaptureView CameraView deactivate");
   }
 
   Future<void> checkPermission() async {
@@ -42,7 +67,7 @@ class _CameraViewState extends State<CameraView> {
         isPermission = true;
       });
 
-      const EventChannel('tnex_ekyc_listener').receiveBroadcastStream()
+      eventEkyc = const EventChannel('tnex_ekyc_listener').receiveBroadcastStream()
           .listen(ekycEvent);
     }else{
       var event = <dynamic, dynamic>{
@@ -65,6 +90,7 @@ class _CameraViewState extends State<CameraView> {
     }
   }
 
+
   @override
   Widget build(BuildContext context) {
     // This is used in the platform side to register the view.
@@ -76,7 +102,7 @@ class _CameraViewState extends State<CameraView> {
     creationParams["detectType"] = widget.detectType;
     debugPrint('ekycEvent build detectType = ${widget.detectType}');
 
-    if (isPermission == true){
+    if (isPermission == true && isPauseCamera == false){
       if (defaultTargetPlatform == TargetPlatform.android) {
         return AndroidView(
           viewType: viewType,

@@ -15,7 +15,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const MaterialApp(
       title: "My Demo Media Query",
-      home: HomeApp(),
+      home: EkycView(),
     );
   }
 }
@@ -93,12 +93,8 @@ class _HomeAppState extends State<HomeApp> {
           actions: <Widget>[
             TextButton(
               child: const Text('OK'),
-              onPressed: () {
-                Navigator.of(context).pop();
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const EkycView()),
-                );
+              onPressed: () async {
+
               },
             ),
           ],
@@ -115,6 +111,12 @@ class _HomeAppState extends State<HomeApp> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Plugin example app'),
+        leading: BackButton(
+          onPressed: () {
+            Tnexekyc.onStopCamera();
+            Navigator.of(context).pop(true);
+          },
+        ),
       ),
       body: Column(children: [
         Container(

@@ -13,10 +13,12 @@ internal class FlutterCaptureView(activity:Activity, context: Context, id: Int, 
     PlatformView {
     private val captureView: CameraCaptureLayout = CameraCaptureLayout(context, listener)
     override fun getView(): View {
+        Log.i("ekycEventBIENNT", "ekycEventBIENNT FlutterCaptureView getView")
         return captureView
     }
 
     override fun dispose() {
+        Log.i("ekycEventBIENNT", "ekycEventBIENNT FlutterCaptureView dispose")
         captureView.stopCamera()
     }
 

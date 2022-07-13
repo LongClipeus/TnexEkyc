@@ -45,6 +45,7 @@ class CameraCaptureLayout(context: Context,
         inflate(context, R.layout.camerax_capture, this)
         constraintLayout = findViewById(R.id.constraintLayout)
         previewView = findViewById(R.id.previewView)
+        previewView.implementationMode = PreviewView.ImplementationMode.COMPATIBLE
     }
 
 
@@ -102,16 +103,22 @@ class CameraCaptureLayout(context: Context,
     }
 
     private fun bindAllCameraUseCases() {
+        lifecycleOwner = activity.getLifecycleOwner()
+        if(lifecycleOwner == null){
+            sendError("FAILED")
+            return
+        }
+
         if (cameraProvider == null) {
             sendError("FAILED")
             return
         }
 
-        cameraProvider!!.unbindAll()
-        lifecycleOwner = activity.getLifecycleOwner()
-        if(lifecycleOwner == null){
-            sendError("FAILED")
-            return
+        cameraProvider?.unbindAll()
+
+
+        if(imageCapture != null){
+            cameraProvider?.unbind(imageCapture)
         }
 
         val preview = Preview.Builder()
@@ -128,7 +135,6 @@ class CameraCaptureLayout(context: Context,
 
 
         val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
-
         try {
             cameraProvider?.unbindAll()
             cameraProvider?.bindToLifecycle(

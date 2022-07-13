@@ -8,6 +8,8 @@ import 'package:tnexekyc/ekyc_camera_view.dart';
 import 'package:tnexekyc/tnexekyc.dart';
 import 'package:video_player/video_player.dart';
 
+import 'main.dart';
+
 class EkycView extends StatefulWidget {
   const EkycView({Key? key}) : super(key: key);
 
@@ -17,6 +19,7 @@ class EkycView extends StatefulWidget {
 
 class _EkycViewState extends State<EkycView> {
   String selectType = '';
+  bool stopEkyc = false;
   List<String> detectType = [];
   late VideoPlayerController _controller;
 
@@ -167,8 +170,25 @@ class _EkycViewState extends State<EkycView> {
           actions: <Widget>[
             TextButton(
               child: const Text('OK'),
-              onPressed: () {
+              onPressed: () async {
+                Tnexekyc.onStopEkyc();
                 Navigator.of(context).pop();
+                // setState(() {
+                //   stopEkyc = true;
+                // });
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const HomeApp()),
+                );
+                if(result){
+                  // setState(() {
+                  //   stopEkyc = false;
+                  // });
+                  Future.delayed(const Duration(milliseconds: 500), () {
+                    Tnexekyc.onStartEkyc();
+                  });
+
+                }
               },
             ),
           ],
@@ -259,7 +279,7 @@ class _EkycViewState extends State<EkycView> {
           color: const Color(0xff000000),
           height: height,
           width: width,
-          child: detectType.isEmpty ? null : CameraView(hCamera.round(), width.round(), detectType, ekycResults, ekycStartDetectType),
+          child: detectType.isEmpty || stopEkyc ? null : CameraView(hCamera.round(), width.round(), detectType, ekycResults, ekycStartDetectType),
         ),),
         Container(
           margin: EdgeInsets.only(left: 45, right: 45, bottom: 60),

@@ -253,21 +253,6 @@ class CameraConstraintLayout(context: Context,
         }
     }
 
-    @SuppressLint("UnsafeOptInUsageError")
-    private fun proxyImageProcess(imageProxy: ImageProxy){
-        val bitmap: Bitmap? = BitmapUtils.getBitmap(imageProxy)
-        imageProxy.close()
-        imageProcessor!!.drawImageBitmap(bitmap, graphicImage)
-        try {
-            imageProcessor!!.processBitmap(bitmap, graphicOverlay)
-            Log.i("FaceDetectorProcessor", "imageProcessor")
-        } catch (e: MlKitException) {
-            Log.i("FaceDetectorProcessor", "Failed to process image. Error: " + e.localizedMessage)
-            Toast.makeText(context, e.localizedMessage, Toast.LENGTH_SHORT).show()
-            sendEkycEvent(DetectionEvent.FAILED, null)
-        }
-    }
-
     private fun getDetectTypeFromName(type: String): DetectionType{
         return when (type) {
             DetectionType.BLINK_EYE.type -> DetectionType.BLINK_EYE
@@ -373,8 +358,6 @@ class CameraConstraintLayout(context: Context,
 
     fun onStartEkyc() {
         cameraExecutor = Executors.newSingleThreadExecutor()
-
-
         bindAllCameraUseCases()
     }
 

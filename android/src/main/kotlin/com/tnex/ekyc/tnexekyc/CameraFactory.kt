@@ -13,18 +13,24 @@ class CameraFactory constructor(
     private val listener: EkycListener
 ) : PlatformViewFactory(StandardMessageCodec.INSTANCE) {
     private lateinit var cameraView: FlutterCameraView
+    private var isInit = false
 
     override fun create(context: Context, viewId: Int, args: Any?): PlatformView {
         val creationParams = args as Map<*, *>?
         cameraView =  FlutterCameraView(activity, context, viewId, creationParams, listener)
+        isInit = true
         return cameraView
     }
 
     fun onStartEkyc() {
-        cameraView.onStartEkyc()
+        if(isInit){
+            cameraView.onStartEkyc()
+        }
     }
 
     fun onStopEkyc() {
-        cameraView.onStopEkyc()
+        if(isInit){
+            cameraView.onStopEkyc()
+        }
     }
 }
