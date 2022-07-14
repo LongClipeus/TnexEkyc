@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:tnexekyc/tnexekyc.dart';
 
 class CaptureView extends StatefulWidget {
   const CaptureView(
@@ -47,6 +48,7 @@ class _CaptureViewState extends State<CaptureView> {
     if(eventCapture != null){
       eventCapture.cancel();
     }
+    Tnexekyc.onStopCamera();
   }
 
   @override

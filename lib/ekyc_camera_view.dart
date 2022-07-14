@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:tnexekyc/tnexekyc.dart';
 
 class CameraView extends StatefulWidget {
   const CameraView(
@@ -50,6 +51,8 @@ class _CameraViewState extends State<CameraView> {
     if(eventEkyc != null){
       eventEkyc.cancel();
     }
+
+    Tnexekyc.onStopEkyc();
   }
 
   @override
