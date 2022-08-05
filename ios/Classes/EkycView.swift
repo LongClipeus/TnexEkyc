@@ -731,8 +731,8 @@ extension EkycView {
                 let fY = abs(minfY - Float(mNose.position.y))
                 newListLandmarkFaceY.append(fY)
             }
-            
-            print("BienNT Log Detect newListDataRight =  \(newListDataRight) newListDataLeft = \(newListDataLeft) isFaceStraight = \(isFaceStraight)")
+//
+//            print("BienNT Log Detect newListDataRight =  \(newListDataRight) newListDataLeft = \(newListDataLeft) isFaceStraight = \(isFaceStraight)")
 //
 //        }
         
