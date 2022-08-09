@@ -654,7 +654,7 @@ extension EkycView {
     private func addBlinkingEyes(face: Face, listDataLeft: [Float]?, listDataRight: [Float]?, landmarkFaceY: [Float]?, landmarkEyeLeftY: [Float]?, landmarkEyeRightY: [Float]?) -> [String: [Float]] {
         let left = Float(face.leftEyeOpenProbability)
         let right = Float(face.rightEyeOpenProbability)
-//        let isFaceStraight = checkFaceStraight(face: face)
+        let isFaceStraight = checkFaceStraight(face: face)
         var newListDataLeft: [Float] = []
         if let dataLeft = listDataLeft, !dataLeft.isEmpty {
             newListDataLeft = dataLeft
@@ -695,7 +695,7 @@ extension EkycView {
 //        }
         
         
-//        if(isFaceStraight){
+        if(isFaceStraight){
 //            if((newListDataLeft.count > 0 && left > newListDataLeft[newListDataLeft.count - 1]) || (newListDataRight.count > 0 && right > newListDataRight[newListDataRight.count - 1]) ){
 //                newListDataLeft.removeAll()
 //                newListLandmarkLeftY.removeAll()
@@ -734,7 +734,7 @@ extension EkycView {
 //
 //            print("BienNT Log Detect newListDataRight =  \(newListDataRight) newListDataLeft = \(newListDataLeft) isFaceStraight = \(isFaceStraight)")
 //
-//        }
+        }
         
         var newData: [String: [Float]] = [:]
         newData[DataType.EYE_LEFT.rawValue] = newListDataLeft
@@ -764,24 +764,33 @@ extension EkycView {
     }
     
     private func checkBlinkingEyes(listDataLeft: [Float]?, listDataRight: [Float]?) -> Bool{
-        if let l = listDataLeft, !l.isEmpty, l.count >= 3, let r = listDataRight, !r.isEmpty, r.count >= 3{
-//            let decLeft = decCheck(listData: l)
-//            let decRight = decCheck(listData: r)
-//
-//            if(decLeft && decRight){
-                let newLeft = sortDEC(listData: l)
-                let newRight = sortDEC(listData: r)
-                
-                if(newLeft[0] > 0.6 && newLeft[newLeft.count - 1 ] < 0.2 && newRight[0] > 0.6 && newRight[newRight.count - 1] < 0.2){
-                    return true
-                }
-//            }
-            
-            
+        if let l = listDataLeft, !l.isEmpty, l.count > 0, let r = listDataRight, !r.isEmpty, r.count > 0 {
+            if(l[l.count - 1 ] < 0.4 && r[r.count - 1] < 0.4){
+                return true
+            }
             return false
         }
         
         return false
+        
+//        if let l = listDataLeft, !l.isEmpty, l.count >= 3, let r = listDataRight, !r.isEmpty, r.count >= 3{
+////            let decLeft = decCheck(listData: l)
+////            let decRight = decCheck(listData: r)
+////
+////            if(decLeft && decRight){
+//                let newLeft = sortDEC(listData: l)
+//                let newRight = sortDEC(listData: r)
+//
+//                if(newLeft[0] > 0.6 && newLeft[newLeft.count - 1 ] < 0.2 && newRight[0] > 0.6 && newRight[newRight.count - 1] < 0.2){
+//                    return true
+//                }
+////            }
+//
+//
+//            return false
+//        }
+//
+//        return false
     }
     
     private func addDataSmiling(face: Face, listData: [Float]?, listMouthBottomLeftX: [Float]?, listMouthBottomLeftY: [Float]?) -> [String: [Float]]{
@@ -872,19 +881,28 @@ extension EkycView {
     }
     
     private func checkSmiling(listData: [Float]?) -> Bool {
-        if let data = listData, !data.isEmpty, data.count >= 3 {
-//            let isASC = ascCheck(listData: data)
-//            if(isASC){
-                let newList = sortASC(listData: data)
-                if(newList[0] <= 0.4 && newList[newList.count - 1] >= 0.7){
-                    return true
-                }
-//            }
-            
+        if let data = listData, !data.isEmpty, data.count > 0 {
+            if(data[data.count - 1] >= 0.5){
+                return true
+            }
             return false
         }
         
         return false
+        
+//        if let data = listData, !data.isEmpty, data.count >= 3 {
+////            let isASC = ascCheck(listData: data)
+////            if(isASC){
+//                let newList = sortASC(listData: data)
+//                if(newList[0] <= 0.4 && newList[newList.count - 1] >= 0.7){
+//                    return true
+//                }
+////            }
+//
+//            return false
+//        }
+//
+//        return false
     }
     
     private func addFaceTurnRight(face: Face, listData: [Float]?) -> [String: [Float]]{
@@ -915,20 +933,29 @@ extension EkycView {
     }
     
     private func checkFaceTurnRight(listData: [Float]?) -> Bool{
-        if let data = listData, !data.isEmpty{
-//            let isASC = ascCheck(listData: data)
-//            if(isASC){
-                let newData = sortASC(listData: data)
-                print("BienNT Log Detect addFaceTurnRight  newData =  \(newData)")
-
-                if(newData[0] <= 10 &&  newData[newData.count - 1] > 30){
-                    return true
-                }
-//            }
+        if let data = listData, !data.isEmpty, data.count > 0 {
+            if(data[data.count - 1] > 30){
+                return true
+            }
             return false
         }
         
         return false
+        
+//        if let data = listData, !data.isEmpty{
+////            let isASC = ascCheck(listData: data)
+////            if(isASC){
+//                let newData = sortASC(listData: data)
+//                print("BienNT Log Detect addFaceTurnRight  newData =  \(newData)")
+//
+//                if(newData[0] <= 10 &&  newData[newData.count - 1] > 30){
+//                    return true
+//                }
+////            }
+//            return false
+//        }
+//
+//        return false
     }
     
     private func addFaceTurnLeft(face: Face, listData: [Float]?) -> [String: [Float]] {
@@ -958,21 +985,31 @@ extension EkycView {
     
     
     private func checkFaceTurnLeft(listData: [Float]?) -> Bool{
-        if let data = listData, !data.isEmpty{
-//            let isDEC = decCheck(listData: data)
-//            if(isDEC){
-                let newData = sortDEC(listData: data)
-                print("BienNT Log Detect addFaceTurnLeft  newData =  \(newData)")
-
-                if(newData[0] >= -10  && newData[newData.count - 1] < -30){
-                    return true
-                }
-//            }
+        if let data = listData, !data.isEmpty, data.count > 0 {
+            if(data[data.count - 1] < -30){
+                return true
+            }
             
             return false
         }
         
         return false
+        
+//        if let data = listData, !data.isEmpty{
+////            let isDEC = decCheck(listData: data)
+////            if(isDEC){
+//                let newData = sortDEC(listData: data)
+//                print("BienNT Log Detect addFaceTurnLeft  newData =  \(newData)")
+//
+//                if(newData[0] >= -10  && newData[newData.count - 1] < -30){
+//                    return true
+//                }
+////            }
+//
+//            return false
+//        }
+//
+//        return false
     }
     
     
