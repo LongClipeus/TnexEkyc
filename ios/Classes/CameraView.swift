@@ -101,7 +101,6 @@ class CameraView: UIView, AVCapturePhotoCaptureDelegate {
         return nil
     }
     
-    
     func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?) {
         print("BienNT photoOutput")
         guard let imageData = photo.fileDataRepresentation() else {
