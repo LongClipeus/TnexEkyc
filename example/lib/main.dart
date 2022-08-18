@@ -15,7 +15,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const MaterialApp(
       title: "My Demo Media Query",
-      home: HomeApp(),
+      home: EkycView(),
     );
   }
 }

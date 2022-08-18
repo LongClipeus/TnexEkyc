@@ -95,6 +95,7 @@ class CompressVideo
                     if(successCode == Transcoder.SUCCESS_NOT_NEEDED){
                         Log.i("updateProgress", "addKYCDocument SUCCESS_NOT_NEEDED retry = $retry")
                         if(retry >= 3){
+                            Log.i("updateProgress", "addKYCDocument SUCCESS_NOT_NEEDED listener.onFailed")
                             listener.onFailed()
                         }else{
                             compress(path, quality, context, listener, retry + 1)

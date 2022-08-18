@@ -88,6 +88,7 @@ class TnexekycPlugin: FlutterPlugin, MethodCallHandler, ActivityAware, EkycListe
           }
 
           override fun onFailed() {
+            Log.i("updateProgress", "addKYCDocument SUCCESS_NOT_NEEDED result.success null")
             result.success(null)
           }
 

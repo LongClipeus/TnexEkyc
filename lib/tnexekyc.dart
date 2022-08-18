@@ -47,6 +47,8 @@ class Tnexekyc {
       'quality': quality.index,
     });
 
+    print("addKYCDocument SUCCESS_NOT_NEEDED invokeMethod $jsonStr");
+
     return jsonStr;
   }
 }
