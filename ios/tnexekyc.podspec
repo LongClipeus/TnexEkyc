@@ -16,6 +16,7 @@ A new flutter plugin project.
   s.source_files = 'Classes/**/*'
   s.dependency 'Flutter' 
   s.dependency 'MLKitVision'
+  s.ios.vendored_frameworks = 'LivenessDetection.xcframework'
   s.dependency 'GoogleMLKit/FaceDetection', '~> 2.6.0'
   s.static_framework = true
   s.platform = :ios, '11.0'

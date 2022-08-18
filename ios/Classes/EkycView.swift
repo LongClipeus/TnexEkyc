@@ -11,6 +11,7 @@ import MLImage
 import MLKitVision
 import MLKitFaceDetection
 import AVKit
+import LivenessDetection
 
 //let epsilon = 80
 
@@ -28,6 +29,7 @@ class EkycView: UIView {
     private var completion:((DetectionEvent, [String:String]?, String?)->())? = nil
     private var changeDetectType:((String) -> ())? = nil
     private var isStopDetection: Bool = true
+    private var liveness = LiveInterface()
     
     
     private var isUsingFrontCamera = true
@@ -74,6 +76,7 @@ class EkycView: UIView {
         print("BienNT willMove")
         if(!isCreateView){
             isCreateView = true
+            liveness.loadModel()
             self.backgroundColor = .black
             previewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
             previewLayer.videoGravity = AVLayerVideoGravity.resizeAspectFill
@@ -112,8 +115,7 @@ class EkycView: UIView {
         var faces: [Face]
         do {
             faces = try faceDetector.results(in: image)
-        } catch let error {
-            print("Failed to detect faces with error: \(error.localizedDescription).")
+        } catch _ {
             self.updatePreviewOverlayViewWithLastFrame()
             self.sendCallback(detectionEvent: DetectionEvent.FAILED, imagePath: nil, videoPath: nil)
             self.clearDetectData()
@@ -128,27 +130,27 @@ class EkycView: UIView {
                 self.clearDetectData()
                 return
             }
-            let epsilon1 = (width - strongSelf.frame.width)/8
-            let epsilon = 0
-            var facesDetect : [Face] = []
+
+            let eW = width - self.frame.size.width
+            var facesDetect : [FaceData] = []
             for face in faces {
                 if(face.hasTrackingID){
                     let normalizedRect = CGRect(
-                        x: (face.frame.origin.x + CGFloat(epsilon)) / width,
+                        x: (face.frame.origin.x + eW ) / width,
                         y: face.frame.origin.y / height,
-                        width: (face.frame.size.width + CGFloat(epsilon1)) / width,
+                        width: face.frame.size.width  / width,
                         height: face.frame.size.height / height
                     )
                     let standardizedRect = strongSelf.previewLayer.layerRectConverted(
                         fromMetadataOutputRect: normalizedRect
                     ).standardized
                     
-                    print("BienNT standardizedRect \(standardizedRect.origin.x) \(standardizedRect.origin.y)")
                     let h = standardizedRect.origin.y + standardizedRect.size.height
                     let w = standardizedRect.origin.x + standardizedRect.size.width
 
                     if(standardizedRect.origin.y >= 0 && standardizedRect.origin.x >= 0 && h < frame.height && w < frame.width){
-                        facesDetect.append(face)
+                        let faceData = FaceData(face: face, faceRect: standardizedRect)
+                        facesDetect.append(faceData)
                         UIConstants.addRectangle(
                             standardizedRect,
                             to: strongSelf.annotationOverlayView,
@@ -322,6 +324,7 @@ class EkycView: UIView {
         }
     }
     
+    
     private func updatePreviewOverlayViewWithImageBuffer(_ imageBuffer: CVImageBuffer?) {
         print("BienNT updatePreviewOverlayViewWithImageBuffer")
 
@@ -373,16 +376,8 @@ extension EkycView: AVCaptureVideoDataOutputSampleBufferDelegate {
         )
         visionImage.orientation = orientation
         
-        guard let inputImage = MLImage(sampleBuffer: sampleBuffer) else {
-            print("Failed to create MLImage from sample buffer.")
-            return
-        }
-        inputImage.orientation = orientation
-        
-        print("BienNT captureOutput orientation = \(orientation)")
         let imageWidth = CGFloat(CVPixelBufferGetWidth(imageBuffer))
         let imageHeight = CGFloat(CVPixelBufferGetHeight(imageBuffer))
-        print("BienNT captureOutput imageWidth = \(imageWidth) imageHeight = \(imageHeight)")
         let photoData = PhotoData()
         // photo
         photoData.updateData(data: imageBuffer, orientation: orientation, width: imageWidth, height: imageHeight)
@@ -527,8 +522,30 @@ extension EkycView {
         imageData.removeAll()
       }
     
-    private func detect(faces: [Face], photoData: PhotoData){
-        print("BienNT Log Detect")
+    private func checkLiveness(_ imageBuffer: CVImageBuffer?, faceRect: CGRect) -> Bool{
+        guard let newImageBuffer = imageBuffer else {
+            return true
+        }
+        
+        let orientation: UIImage.Orientation = isUsingFrontCamera ? .leftMirrored : .right
+        let image = UIConstants.createNewUIImage(from: newImageBuffer, orientation: orientation, width: frame.width, height: frame.height)
+        
+        guard let uiImage = image else {
+            return true
+        }
+        
+        let liveness = liveness.detectLive(uiImage, x1: Float(faceRect.origin.x), y1: Float(faceRect.origin.y), x2: Float(faceRect.origin.x + faceRect.size.width), y2: Float(faceRect.origin.y + faceRect.size.height))
+        
+        print("BienNTHaHa liveness = \(liveness)");
+        
+        if(liveness >= 0.7){
+            return true
+        }
+
+        return false
+    }
+    
+    private func detect(faces: [FaceData], photoData: PhotoData){
         if(isPauseDetect || isStopDetection){
             return
         }
@@ -539,13 +556,16 @@ extension EkycView {
             self.sendCallback(detectionEvent: DetectionEvent.MULTIPLE_FACE, imagePath: nil, videoPath: nil)
             self.clearDetectData()
         }else{
+            let face = faces[0].getFace()
+            let faceRect = faces[0].getFaceRect()
+            print("BienNT Log Detect face \(face)")
+            checkLiveness(photoData.getData(), faceRect: faceRect)
             if(!isStart){
                 isStart = true
                 startRecordVideo()
             }
             
-            let face = faces[0]
-            print("BienNT Log Detect face \(face)")
+            
             let headEulerAngleY  = face.headEulerAngleY
             if(headEulerAngleY < 16 && headEulerAngleY > -16){
                 listSmiling.append(Float(face.smilingProbability))
@@ -1299,6 +1319,24 @@ extension UIApplication {
         return controller
     }
 }
+
+private class FaceData {
+    private var face: Face
+    private var faceRect: CGRect
+    
+    init(face: Face, faceRect: CGRect) {
+        self.face = face
+        self.faceRect = faceRect
+    }
+    
+    func getFace() -> Face {
+        return self.face
+    }
+    
+    func getFaceRect() -> CGRect {
+        return self.faceRect
+    }
+ }
 
 private class PhotoData {
     private var data: CVImageBuffer?
