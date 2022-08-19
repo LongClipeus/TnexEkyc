@@ -5,27 +5,27 @@ import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
 import android.graphics.*
-import android.media.Image
 import android.util.AttributeSet
 import android.util.Log
 import androidx.constraintlayout.widget.ConstraintLayout
 import android.util.TypedValue
 import android.widget.Toast
 import androidx.camera.core.*
-import androidx.camera.core.ImageAnalysis.OUTPUT_IMAGE_FORMAT_YUV_420_888
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.video.*
 import androidx.camera.video.VideoCapture
+import androidx.core.content.ContextCompat
 import androidx.core.util.Consumer
 import androidx.lifecycle.*
 import androidx.lifecycle.Observer
 import com.google.mlkit.common.MlKitException
-import java.io.ByteArrayOutputStream
 import java.io.File
+import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
+import kotlin.concurrent.schedule
 
 interface EkycListener {
     fun onResults(event: DetectionEvent, imagesPath:HashMap<String, String>?, videoPath: String?)
@@ -49,7 +49,6 @@ class CameraConstraintLayout(context: Context,
     private var currentRecording: Recording? = null
     private var recordingState: VideoRecordEvent? = null
     private var videoPath: String? = null
-    private lateinit var cameraExecutor: ExecutorService
 
     private var graphicOverlay: GraphicOverlay? = null
     private var graphicImage: GraphicOverlay? = null
@@ -65,6 +64,8 @@ class CameraConstraintLayout(context: Context,
     private var viewHeight: Int = 0
     private var viewWidth: Int = 0
 
+    private var isWaitingSendEvent = false
+    private var imagePathWaiting = hashMapOf<String, String>()
 
     init {
         inflate(context, R.layout.camerax_live_preview, this)
@@ -116,10 +117,23 @@ class CameraConstraintLayout(context: Context,
                 Observer { provider: ProcessCameraProvider? ->
                     cameraProvider = provider
                     bindAllCameraUseCases()
+
+//                    Timer().schedule(500) {
+//                        initCameraView()
+//                    }
                 }
             )
     }
 
+    private fun initCameraView() {
+        if(activity.isDestroyed || activity.isFinishing){
+            return
+        }
+
+        activity.runOnUiThread {
+            bindAllCameraUseCases()
+        }
+    }
 
     private fun Activity.getLifecycleOwner(): LifecycleOwner {
         return try {
@@ -130,7 +144,8 @@ class CameraConstraintLayout(context: Context,
     }
 
     private fun bindAllCameraUseCases() {
-        cameraExecutor = Executors.newSingleThreadExecutor()
+        isWaitingSendEvent = false
+        imagePathWaiting.clear()
 
         if (cameraProvider != null) {
             cameraProvider!!.unbindAll()
@@ -191,7 +206,7 @@ class CameraConstraintLayout(context: Context,
             analysisUseCase?.setAnalyzer(
                 // imageProcessor.processImageProxy will use another thread to run the detection underneath,
                 // thus we can just runs the analyzer itself on main thread.
-               cameraExecutor,
+                ContextCompat.getMainExecutor(activity),
                 ImageAnalysis.Analyzer { imageProxy: ImageProxy ->
                     Log.i("FaceDetectorProcessor", "ImageAnalysis $needUpdateGraphicOverlayImageSourceInfo")
                     if (needUpdateGraphicOverlayImageSourceInfo) {
@@ -210,7 +225,6 @@ class CameraConstraintLayout(context: Context,
                     proxyImageProcess1(imageProxy)
                 }
             )
-
 
             val recorder = Recorder.Builder()
                 .setQualitySelector(qualitySelector)
@@ -295,29 +309,31 @@ class CameraConstraintLayout(context: Context,
 
             Log.i("ekycEvent", "ekycEvent start recoder $videoPath")
 
+
             currentRecording = capture.output
                 .prepareRecording(activity, fileOutput)
-                .start(cameraExecutor, captureListener)
+                .start(ContextCompat.getMainExecutor(activity), captureListener)
         } catch (e: Exception) {
             sendEkycEvent(DetectionEvent.FAILED, null)
         }
     }
 
-    private fun stopRecoding(){
+    private fun stopRecoding() {
         if (currentRecording == null || recordingState is VideoRecordEvent.Finalize) {
             return
         }
 
-        val recording = currentRecording
-        if (recording != null) {
-            recording.stop()
-            currentRecording = null
-        }
+        Log.i("Camerx","addKYCDocument call stop")
+        currentRecording?.stop()
+        currentRecording = null
     }
 
     private fun createFile(): File? {
         var file: File? = null
         try {
+            //val sdcardroot: String = context.getExternalFilesDir("video_ekyc")!!.absolutePath
+            //val mFileName = "tnex_video_ekyc.mp4"
+
             val sdcardroot = activity.filesDir.absolutePath
             val mFileName = System.currentTimeMillis().toString() + ".mp4"
             file = File(sdcardroot, mFileName)
@@ -331,8 +347,27 @@ class CameraConstraintLayout(context: Context,
      * CaptureEvent listener.
      */
     private val captureListener = Consumer<VideoRecordEvent> { event ->
-        Log.i("ekycEvent", "ekycEvent captureListener VideoRecordEvent $event")
         recordingState = event
+        if(event is VideoRecordEvent.Finalize){
+            Log.i("ekycEvent", "addKYCDocument VideoRecordEvent.Finalize")
+            if(isWaitingSendEvent){
+                Log.i("ekycEvent", "addKYCDocument isWaitingSendEvent true")
+                if (!event.hasError()) {
+                    Log.i("ekycEvent", "addKYCDocument DetectionEvent.SUCCESS $imagePathWaiting")
+                    Log.i("ekycEvent", "addKYCDocument DetectionEvent.SUCCESS  $videoPath")
+                    listener.onResults(DetectionEvent.SUCCESS, imagePathWaiting, videoPath)
+                } else {
+                    listener.onResults(DetectionEvent.FAILED, null, null)
+                    currentRecording?.close()
+                    currentRecording = null
+                    Log.e("BienNT", "addKYCDocument Video capture ends with error: " +
+                            "${event.error}")
+                }
+
+                isWaitingSendEvent = false
+                imagePathWaiting.clear()
+            }
+        }
     }
 
     override fun onResults(event: DetectionEvent, imagesPath: HashMap<String, String>?) {
@@ -351,18 +386,27 @@ class CameraConstraintLayout(context: Context,
 
 
     private fun sendEkycEvent(event: DetectionEvent, imagesPath: HashMap<String, String>?){
-        onStopEkyc()
-        listener.onResults(event, imagesPath, videoPath)
+        if(event == DetectionEvent.SUCCESS){
+            isWaitingSendEvent = true
+            Log.i("ekycEvent", "addKYCDocument sendEkycEvent isWaitingSendEvent $imagesPath")
+            if(imagesPath != null){
+                imagePathWaiting.putAll(imagesPath)
+            }
+            Log.i("ekycEvent", "addKYCDocument sendEkycEvent isWaitingSendEvent1 $imagePathWaiting")
+
+            onStopEkyc()
+        }else{
+            onStopEkyc()
+            listener.onResults(event, imagesPath, videoPath)
+        }
     }
 
 
     fun onStartEkyc() {
-        cameraExecutor = Executors.newSingleThreadExecutor()
         bindAllCameraUseCases()
     }
 
     fun onStopEkyc() {
-        cameraExecutor.shutdown()
         stopRecoding()
 
         analysisUseCase?.clearAnalyzer()

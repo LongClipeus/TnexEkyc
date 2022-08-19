@@ -15,7 +15,7 @@ import com.otaliastudios.transcoder.common.TrackType
 import com.otaliastudios.transcoder.source.UriDataSource
 import com.otaliastudios.transcoder.strategy.DefaultVideoStrategy
 import com.otaliastudios.transcoder.strategy.TrackStrategy
-import java.io.File
+import java.io.*
 
 
 interface CompressVideoListener {
@@ -44,10 +44,24 @@ class CompressVideo
 
     }
 
+    private fun checkFile(destPath:String){
+        try {
+            val file = File(destPath)
+            if(file.exists()){
+                file.delete()
+            }
+        } catch (e: Exception) {
+
+        }
+    }
+
+
     private fun compress(path: String, quality: Int, context: Context, listener: CompressVideoListener, retry:Int){
         val sdCardRoot = context.filesDir.absolutePath
-//        val tempDir: String = context.getExternalFilesDir("video_compress")!!.absolutePath
         val destPath: String = sdCardRoot + File.separator + System.currentTimeMillis() + path.hashCode() + ".mp4"
+
+//        val destPath: String = sdCardRoot + File.separator + "tnex_video_ekyc_compress.mp4"
+//        checkFile(destPath)
         var videoTrackStrategy: TrackStrategy = DefaultVideoStrategy.atMost(340).build();
         when (quality) {
             0 -> {
@@ -94,7 +108,7 @@ class CompressVideo
                     Log.i("updateProgress", "addKYCDocument destPath = $destPath")
                     if(successCode == Transcoder.SUCCESS_NOT_NEEDED){
                         Log.i("updateProgress", "addKYCDocument SUCCESS_NOT_NEEDED retry = $retry")
-                        if(retry >= 10){
+                        if(retry >= 3){
                             Log.i("updateProgress", "addKYCDocument SUCCESS_NOT_NEEDED listener.onFailed")
                             listener.onFailed()
                         }else{

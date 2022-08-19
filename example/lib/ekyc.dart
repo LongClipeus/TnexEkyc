@@ -107,7 +107,9 @@ class _EkycViewState extends State<EkycView> {
     }
 
 
-    _controller = VideoPlayerController.file(File(mediaPath))
+    _controller = VideoPlayerController.file(File(mediaPath))..addListener(() {
+      print('addKYCDocument Is playing: ${_controller.value}');
+    })
       ..initialize().then((_) {
         debugPrint("addKYCDocument VideoPlayerController initialize");
         _ekycDoneDialog("EKYC", "EKYC SUCCESS" , imagePath);
