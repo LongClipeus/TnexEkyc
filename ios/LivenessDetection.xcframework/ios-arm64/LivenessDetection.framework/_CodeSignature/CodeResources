@@ -6,7 +6,7 @@
 	<dict>
 		<key>Headers/LiveInterface.h</key>
 		<data>
-		NdMyFUgjShcQW4cQRBBnNpg1OWI=
+		MKXEvTDKQSxD0VqTPgNobVlj7DY=
 		</data>
 		<key>Headers/LivenessDetection.h</key>
 		<data>
@@ -19,6 +19,14 @@
 		<key>Modules/module.modulemap</key>
 		<data>
 		6qYvZY/K3NvmVZJu5CZLsG2YZiA=
+		</data>
+		<key>detection.bin</key>
+		<data>
+		G52JYi47ACwak8HkEcpkm9zo1as=
+		</data>
+		<key>detection.param</key>
+		<data>
+		/P9R2sA0/3B3DyOyLFX2Nlv5m6g=
 		</data>
 		<key>framework/ncnn.framework/Versions/A/Headers/ncnn/allocator.h</key>
 		<data>
@@ -2275,7 +2283,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			X2C0xdHj9vGW3izegGSvkY7Fdd4fQRUiDaEMw/TgBL8=
+			Zn6Q0P6Su2il6XLGgEGz3Y8RsCRkcdJEKsa0ycm5ofU=
 			</data>
 		</dict>
 		<key>Headers/LivenessDetection.h</key>
@@ -2290,6 +2298,20 @@
 			<key>hash2</key>
 			<data>
 			GiIp2pl4rgDPPrhzTTIdbdk805EPWGnzjxHZulp/s9s=
+			</data>
+		</dict>
+		<key>detection.bin</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			aSBPVzW2w5vueXMHRoelxdPFfzE45CIHzJJfvcmNVVc=
+			</data>
+		</dict>
+		<key>detection.param</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			TGHjj/2OyS8Wv5ctMTwdpWDoQPT2+zxITW73+shRjGs=
 			</data>
 		</dict>
 		<key>framework/ncnn.framework/Headers</key>

@@ -14,7 +14,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (int)loadModel;
 
+- (int)loadAllModel;
+
+
 - (float)detectLive:(UIImage *)image x1:(float)x1 y1:(float)y1 x2:(float)x2 y2:(float)y2;
+
+- (float)detectLiveFromImage:(UIImage *)image;
 
 - (void)deallocate;
 

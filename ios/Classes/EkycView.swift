@@ -76,7 +76,7 @@ class EkycView: UIView {
         print("BienNT willMove")
         if(!isCreateView){
             isCreateView = true
-            liveness.loadModel()
+            liveness.loadAllModel()
             self.backgroundColor = .black
             previewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
             previewLayer.videoGravity = AVLayerVideoGravity.resizeAspectFill
@@ -522,27 +522,21 @@ extension EkycView {
         imageData.removeAll()
       }
     
-    private func checkLiveness(_ imageBuffer: CVImageBuffer?, faceRect: CGRect) -> Bool{
-        guard let newImageBuffer = imageBuffer else {
-            return true
-        }
-        
-        let orientation: UIImage.Orientation = isUsingFrontCamera ? .leftMirrored : .right
-        let image = UIConstants.createNewUIImage(from: newImageBuffer, orientation: orientation, width: frame.width, height: frame.height)
-        
-        guard let uiImage = image else {
-            return true
-        }
-        
-        let liveness = liveness.detectLive(uiImage, x1: Float(faceRect.origin.x), y1: Float(faceRect.origin.y), x2: Float(faceRect.origin.x + faceRect.size.width), y2: Float(faceRect.origin.y + faceRect.size.height))
-        
-        print("BienNTHaHa liveness = \(liveness)");
-        
-        if(liveness >= 0.7){
-            return true
-        }
+    private func checkLiveness(photoData: PhotoData) -> Bool{
+        guard let data = photoData.getData(), let orientation = photoData.getOrientation()  else { return true}
+        if let imageData = UIConstants.createUIImage(from: data, orientation: orientation) {
+            let live = liveness.detectLive(from: imageData)
+            print("BienNTHaHa live =  \(live)")
 
-        return false
+            if(live >= 0.7){
+                return true
+            }else{
+                return false
+            }
+            
+        }
+        
+        return true
     }
     
     private func detect(faces: [FaceData], photoData: PhotoData){
@@ -559,7 +553,7 @@ extension EkycView {
             let face = faces[0].getFace()
             let faceRect = faces[0].getFaceRect()
             print("BienNT Log Detect face \(face)")
-            checkLiveness(photoData.getData(), faceRect: faceRect)
+            checkLiveness(photoData: photoData)
             if(!isStart){
                 isStart = true
                 startRecordVideo()
