@@ -34,7 +34,7 @@ public interface VisionImageProcessor {
 
   /** Processes ByteBuffer image data, e.g. used for Camera1 live preview case. */
   void processByteBuffer(
-      ByteBuffer data, FrameMetadata frameMetadata, GraphicOverlay graphicOverlay)
+      ByteBuffer data, FrameMetadata frameMetadata, GraphicOverlay graphicOverlay, byte[] yuvData)
       throws MlKitException;
 
   /** Processes ImageProxy image data, e.g. used for CameraX live preview case. */

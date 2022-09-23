@@ -165,7 +165,7 @@ class CameraConstraintLayout(context: Context,
                 val faceDetectorOptions = PreferenceUtils.getFaceDetectorOptions(context)
                 val listDetectionType = getListDetectType()
                 Log.i("FaceDetectorProcessor", "FaceDetectorProcessor layoutParams height = $viewHeight width = $viewWidth")
-                context?.let { FaceDetectorProcessor(it, faceDetectorOptions, listDetectionType, this, viewHeight, viewWidth) }
+                context?.let { FaceDetectorProcessor(it, faceDetectorOptions, listDetectionType, this, viewHeight, viewWidth, activity.assets) }
             } catch (e: Exception) {
                 Log.i("FaceDetectorProcessor", "Can not create image processor: " + e.localizedMessage)
                 sendEkycEvent(DetectionEvent.FAILED, null)
@@ -226,6 +226,7 @@ class CameraConstraintLayout(context: Context,
 
     @SuppressLint("UnsafeOptInUsageError")
     private fun proxyImageProcess1(imageProxy: ImageProxy){
+        Log.i("BienNT = ", "imageProxy.imageInfo.rotationDegrees = " + imageProxy.imageInfo.rotationDegrees)
         val frameMetadata = FrameMetadata.Builder()
             .setWidth(imageProxy.width)
             .setHeight(imageProxy.height)
@@ -239,12 +240,14 @@ class CameraConstraintLayout(context: Context,
         )
 
         val bitmap: Bitmap? = BitmapUtils.getBitmap(nv21Buffer, frameMetadata)
-        imageProxy.close()
+        //val yuv420: ByteArray? = BitmapUtils.getYUV420(nv21Buffer, frameMetadata)
+        val yuv420: ByteArray? = BitmapUtils.rotateNV21_working(nv21Buffer, imageProxy.width, imageProxy.height, imageProxy.imageInfo.rotationDegrees)
 
+        imageProxy.close()
         imageProcessor!!.drawImageBitmap(bitmap, graphicImage)
 
         try {
-            imageProcessor!!.processByteBuffer(nv21Buffer, frameMetadata, graphicOverlay)
+            imageProcessor!!.processByteBuffer(nv21Buffer, frameMetadata, graphicOverlay, yuv420)
             Log.i("FaceDetectorProcessor", "imageProcessor")
         } catch (e: MlKitException) {
             Log.i("FaceDetectorProcessor", "Failed to process image. Error: " + e.localizedMessage)
@@ -375,4 +378,5 @@ class CameraConstraintLayout(context: Context,
             cameraProvider!!.unbindAll()
         }
     }
+
 }

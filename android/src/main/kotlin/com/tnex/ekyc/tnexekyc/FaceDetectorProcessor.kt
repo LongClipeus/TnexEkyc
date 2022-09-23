@@ -17,6 +17,7 @@
 package com.tnex.ekyc.tnexekyc
 
 import android.content.Context
+import android.content.res.AssetManager
 import android.graphics.Bitmap
 import android.os.Handler
 import android.os.Looper
@@ -28,6 +29,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.io.OutputStream
+import java.nio.ByteBuffer
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
@@ -76,7 +78,7 @@ interface DetectionListener {
 
 /** Face Detector Demo.  */
 class FaceDetectorProcessor(context: Context, detectorOptions: FaceDetectorOptions?, override val listDetectionType: ArrayList<DetectionType>,
-                            override val listener: DetectionListener, viewHeight: Int, viewWidth: Int
+                            override val listener: DetectionListener, viewHeight: Int, viewWidth: Int, assetManager: AssetManager
 ) :
   VisionProcessorBase<List<Face>>(context) {
 
@@ -94,6 +96,8 @@ class FaceDetectorProcessor(context: Context, detectorOptions: FaceDetectorOptio
   private var imageData = hashMapOf<String, String>()
 
   private var listDataDetect =  hashMapOf<String, ArrayList<Float>>()
+  private lateinit var engineWrapper: EngineWrapper
+
 
   private var runnableTimeout: Runnable = Runnable {
     Log.i(TAG, "ekycEvent runnableTimeout")
@@ -124,6 +128,8 @@ class FaceDetectorProcessor(context: Context, detectorOptions: FaceDetectorOptio
       isPauseDetect = true
       currIndexDetectionType = 0
       listDataDetect.clear()
+      engineWrapper = EngineWrapper(assetManager)
+      engineWrapper.init()
       currDetectionType = listDetectionType[currIndexDetectionType]
       listener.onStartDetectionType(currDetectionType.type)
       mHandler.postDelayed(runnableTimeout, timeoutDetectionTime)
@@ -136,6 +142,7 @@ class FaceDetectorProcessor(context: Context, detectorOptions: FaceDetectorOptio
   override fun stop() {
     super.stop()
     detector.close()
+    engineWrapper.destroy()
     mHandler.removeCallbacks(runnableTimeout)
   }
 
@@ -143,7 +150,7 @@ class FaceDetectorProcessor(context: Context, detectorOptions: FaceDetectorOptio
     return detector.process(image)
   }
 
-  override fun onSuccess(results: List<Face>, graphicOverlay: GraphicOverlay, originalCameraImage: Bitmap?) {
+  override fun onSuccess(results: List<Face>, graphicOverlay: GraphicOverlay, originalCameraImage: Bitmap?, data: ByteArray?) {
     Log.i(TAG, "onSuccess")
     if(isPauseDetect){
       return
@@ -182,6 +189,17 @@ class FaceDetectorProcessor(context: Context, detectorOptions: FaceDetectorOptio
         onMultipleFace(faceDetect, graphicOverlay)
       }else{
         val face = faceDetect[0]
+        Log.i("engineWrapper", "BienNT liveness")
+
+        val newData = data
+        if(newData != null){
+          val liveness = originalCameraImage?.let {
+            engineWrapper.detect(newData,
+              it.width, it.height, 7)
+          }
+          Log.i("engineWrapper", "BienNT liveness = $liveness")
+        }
+
         onFace(face, graphicOverlay, originalCameraImage)
       }
     }

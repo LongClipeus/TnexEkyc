@@ -120,6 +120,7 @@ abstract class VisionProcessorBase<T>(context: Context) : VisionImageProcessor {
         mlImage,
         graphicOverlay,
         /* originalCameraImage= */ null,
+        null,
         /* shouldShowFps= */ false,
         frameStartMs
       )
@@ -131,6 +132,7 @@ abstract class VisionProcessorBase<T>(context: Context) : VisionImageProcessor {
       InputImage.fromBitmap(bitmap!!, 0),
       graphicOverlay,
       /* originalCameraImage= */ null,
+      null,
       /* shouldShowFps= */ false,
       frameStartMs
     )
@@ -141,30 +143,32 @@ abstract class VisionProcessorBase<T>(context: Context) : VisionImageProcessor {
   override fun processByteBuffer(
     data: ByteBuffer?,
     frameMetadata: FrameMetadata?,
-    graphicOverlay: GraphicOverlay
+    graphicOverlay: GraphicOverlay,
+    yuvData: ByteArray?
   ) {
     latestImage = data
     latestImageMetaData = frameMetadata
     if (processingImage == null && processingMetaData == null) {
-      processLatestImage(graphicOverlay)
+      processLatestImage(graphicOverlay, yuvData)
     }
   }
 
   @Synchronized
-  private fun processLatestImage(graphicOverlay: GraphicOverlay) {
+  private fun processLatestImage(graphicOverlay: GraphicOverlay, yuvData: ByteArray?) {
     processingImage = latestImage
     processingMetaData = latestImageMetaData
     latestImage = null
     latestImageMetaData = null
     if (processingImage != null && processingMetaData != null && !isShutdown) {
-      processImage(processingImage!!, processingMetaData!!, graphicOverlay)
+      processImage(processingImage!!, processingMetaData!!, graphicOverlay, yuvData)
     }
   }
 
   private fun processImage(
     data: ByteBuffer,
     frameMetadata: FrameMetadata,
-    graphicOverlay: GraphicOverlay
+    graphicOverlay: GraphicOverlay,
+    yuv420: ByteArray?
   ) {
     val frameStartMs = SystemClock.elapsedRealtime()
     // If live viewport is on (that is the underneath surface view takes care of the camera preview
@@ -183,8 +187,8 @@ abstract class VisionProcessorBase<T>(context: Context) : VisionImageProcessor {
           )
           .setRotation(frameMetadata.rotation)
           .build()
-      requestDetectInImage(mlImage, graphicOverlay, bitmap, /* shouldShowFps= */ true, frameStartMs)
-        .addOnSuccessListener(executor) { processLatestImage(graphicOverlay) }
+      requestDetectInImage(mlImage, graphicOverlay, bitmap, yuv420,/* shouldShowFps= */ true, frameStartMs)
+        .addOnSuccessListener(executor) { processLatestImage(graphicOverlay, yuv420) }
 
       // This is optional. Java Garbage collection can also close it eventually.
       mlImage.close()
@@ -201,10 +205,11 @@ abstract class VisionProcessorBase<T>(context: Context) : VisionImageProcessor {
       ),
       graphicOverlay,
       bitmap,
+      yuv420,
       /* shouldShowFps= */ true,
       frameStartMs
     )
-      .addOnSuccessListener(executor) { processLatestImage(graphicOverlay) }
+      .addOnSuccessListener(executor) { processLatestImage(graphicOverlay, yuv420) }
   }
 
   override fun drawImageBitmap(bitmap: Bitmap, graphicImage: GraphicOverlay) {
@@ -255,6 +260,7 @@ abstract class VisionProcessorBase<T>(context: Context) : VisionImageProcessor {
         mlImage,
         graphicOverlay,
         /* originalCameraImage= */ bitmap,
+        null,
         /* shouldShowFps= */ true,
         frameStartMs
       )
@@ -275,6 +281,7 @@ abstract class VisionProcessorBase<T>(context: Context) : VisionImageProcessor {
       inputImage,
       graphicOverlay,
       /* originalCameraImage= */ bitmap,
+      null,
       /* shouldShowFps= */ true,
       frameStartMs
     )
@@ -291,6 +298,7 @@ abstract class VisionProcessorBase<T>(context: Context) : VisionImageProcessor {
     image: InputImage,
     graphicOverlay: GraphicOverlay,
     originalCameraImage: Bitmap?,
+    data: ByteArray?,
     shouldShowFps: Boolean,
     frameStartMs: Long
   ): Task<T> {
@@ -298,6 +306,7 @@ abstract class VisionProcessorBase<T>(context: Context) : VisionImageProcessor {
       detectInImage(image),
       graphicOverlay,
       originalCameraImage,
+      data,
       shouldShowFps,
       frameStartMs
     )
@@ -307,6 +316,7 @@ abstract class VisionProcessorBase<T>(context: Context) : VisionImageProcessor {
     image: MlImage,
     graphicOverlay: GraphicOverlay,
     originalCameraImage: Bitmap?,
+    data: ByteArray?,
     shouldShowFps: Boolean,
     frameStartMs: Long
   ): Task<T> {
@@ -314,6 +324,7 @@ abstract class VisionProcessorBase<T>(context: Context) : VisionImageProcessor {
       detectInImage(image),
       graphicOverlay,
       originalCameraImage,
+      data,
       shouldShowFps,
       frameStartMs
     )
@@ -323,6 +334,7 @@ abstract class VisionProcessorBase<T>(context: Context) : VisionImageProcessor {
     task: Task<T>,
     graphicOverlay: GraphicOverlay,
     originalCameraImage: Bitmap?,
+    data: ByteArray?,
     shouldShowFps: Boolean,
     frameStartMs: Long
   ): Task<T> {
@@ -377,7 +389,7 @@ abstract class VisionProcessorBase<T>(context: Context) : VisionImageProcessor {
 //          if (originalCameraImage != null) {
 //            graphicOverlay.add(CameraImageGraphic(graphicOverlay, originalCameraImage))
 //          }
-          this@VisionProcessorBase.onSuccess(results, graphicOverlay, originalCameraImage)
+          this@VisionProcessorBase.onSuccess(results, graphicOverlay, originalCameraImage, data)
           graphicOverlay.postInvalidate()
         }
       )
@@ -431,7 +443,7 @@ abstract class VisionProcessorBase<T>(context: Context) : VisionImageProcessor {
     )
   }
 
-  protected abstract fun onSuccess(results: T, graphicOverlay: GraphicOverlay, originalCameraImage: Bitmap?)
+  protected abstract fun onSuccess(results: T, graphicOverlay: GraphicOverlay, originalCameraImage: Bitmap?, data: ByteArray?)
 
   protected abstract fun onFailure(e: Exception)
 

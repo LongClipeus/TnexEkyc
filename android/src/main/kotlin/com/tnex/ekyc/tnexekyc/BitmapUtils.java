@@ -16,6 +16,7 @@
 
 package com.tnex.ekyc.tnexekyc;
 
+import static android.graphics.ImageFormat.NV21;
 import static androidx.core.math.MathUtils.clamp;
 
 import android.annotation.SuppressLint;
@@ -32,6 +33,7 @@ import android.media.Image;
 import android.media.Image.Plane;
 import android.net.Uri;
 import android.os.Build.VERSION_CODES;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.renderscript.Allocation;
 import android.renderscript.Element;
@@ -46,10 +48,15 @@ import androidx.camera.core.ExperimentalGetImage;
 import androidx.camera.core.ImageProxy;
 import androidx.exifinterface.media.ExifInterface;
 
+import com.google.common.io.ByteArrayDataInput;
+
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.nio.ReadOnlyBufferException;
 
 /** Utils functions for bitmap conversions. */
 public class BitmapUtils {
@@ -63,7 +70,7 @@ public class BitmapUtils {
     try {
       YuvImage image =
           new YuvImage(
-              imageInBuffer, ImageFormat.NV21, metadata.getWidth(), metadata.getHeight(), null);
+              imageInBuffer, NV21, metadata.getWidth(), metadata.getHeight(), null);
       ByteArrayOutputStream stream = new ByteArrayOutputStream();
       image.compressToJpeg(new Rect(0, 0, metadata.getWidth(), metadata.getHeight()), 80, stream);
 
@@ -75,6 +82,120 @@ public class BitmapUtils {
       Log.e("VisionProcessorBase", "Error: " + e.getMessage());
     }
     return null;
+  }
+
+  // untested function
+  private static byte [] getNV21(Bitmap scaled) {
+
+    if(scaled == null){
+      return null;
+    }
+
+    int inputWidth = scaled.getWidth();
+    int inputHeight = scaled.getHeight();
+
+    int [] argb = new int[inputWidth * inputHeight];
+
+    scaled.getPixels(argb, 0, inputWidth, 0, 0, inputWidth, inputHeight);
+
+    byte [] yuv = new byte[inputWidth*inputHeight*3/2];
+    encodeYUV420SP(yuv, argb, inputWidth, inputHeight);
+
+    scaled.recycle();
+
+    return yuv;
+  }
+
+
+  private static void encodeYUV420SP(byte[] yuv420sp, int[] argb, int width, int height) {
+    final int frameSize = width * height;
+
+    int yIndex = 0;
+    int uvIndex = frameSize;
+
+    int a, R, G, B, Y, U, V;
+    int index = 0;
+    for (int j = 0; j < height; j++) {
+      for (int i = 0; i < width; i++) {
+
+        a = (argb[index] & 0xff000000) >> 24; // a is not used obviously
+        R = (argb[index] & 0xff0000) >> 16;
+        G = (argb[index] & 0xff00) >> 8;
+        B = (argb[index] & 0xff);
+
+        // well known RGB to YUV algorithm
+        Y = ( (  66 * R + 129 * G +  25 * B + 128) >> 8) +  16;
+        U = ( ( -38 * R -  74 * G + 112 * B + 128) >> 8) + 128;
+        V = ( ( 112 * R -  94 * G -  18 * B + 128) >> 8) + 128;
+
+        // NV21 has a plane of Y and interleaved planes of VU each sampled by a factor of 2
+        //    meaning for every 4 Y pixels there are 1 V and 1 U.  Note the sampling is every other
+        //    pixel AND every other scanline.
+        yuv420sp[yIndex++] = (byte) ((Y < 0) ? 0 : (Math.min(Y, 255)));
+        if (j % 2 == 0 && index % 2 == 0) {
+          yuv420sp[uvIndex++] = (byte)((V<0) ? 0 : (Math.min(V, 255)));
+          yuv420sp[uvIndex++] = (byte)((U<0) ? 0 : (Math.min(U, 255)));
+        }
+
+        index ++;
+      }
+    }
+  }
+
+
+  public static byte[] rotateNV21_working(final ByteBuffer data,
+                                          final int width,
+                                          final int height,
+                                          final int rotation)
+  {
+    data.rewind();
+    byte[] yuv = new byte[data.limit()];
+    data.get(yuv, 0, yuv.length);
+
+    if (rotation == 0) return yuv;
+    if (rotation % 90 != 0 || rotation < 0 || rotation > 270) {
+      throw new IllegalArgumentException("0 <= rotation < 360, rotation % 90 == 0");
+    }
+
+    final byte[]  output    = new byte[yuv.length];
+    final int     frameSize = width * height;
+    final boolean swap      = rotation % 180 != 0;
+    final boolean xflip     = rotation % 270 != 0;
+    final boolean yflip     = rotation >= 180;
+
+    for (int j = 0; j < height; j++) {
+      for (int i = 0; i < width; i++) {
+        final int yIn = j * width + i;
+        final int uIn = frameSize + (j >> 1) * width + (i & ~1);
+        final int vIn = uIn       + 1;
+
+        final int wOut     = swap  ? height              : width;
+        final int hOut     = swap  ? width               : height;
+        final int iSwapped = swap  ? j                   : i;
+        final int jSwapped = swap  ? i                   : j;
+        final int iOut     = xflip ? wOut - iSwapped - 1 : iSwapped;
+        final int jOut     = yflip ? hOut - jSwapped - 1 : jSwapped;
+
+        final int yOut = jOut * wOut + iOut;
+        final int uOut = frameSize + (jOut >> 1) * wOut + (iOut & ~1);
+        final int vOut = uOut + 1;
+
+        output[yOut] = (byte)(0xff & yuv[yIn]);
+        output[uOut] = (byte)(0xff & yuv[uIn]);
+        output[vOut] = (byte)(0xff & yuv[vIn]);
+      }
+    }
+    return output;
+  }
+
+
+  @Nullable
+  public static byte[] getYUV420(ByteBuffer data, FrameMetadata metadata) {
+    Bitmap bitmap = getBitmap(data, metadata);
+    if(bitmap == null){
+      return null;
+    }
+    return getNV21(bitmap);
   }
 
   /** Converts a YUV_420_888 image from CameraX API to a bitmap. */
@@ -185,8 +306,7 @@ public class BitmapUtils {
     return exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
   }
 
-  /**
-   * Converts YUV_420_888 to NV21 bytebuffer.
+  /* Converts YUV_420_888 to NV21 bytebuffer.
    *
    * <p>The NV21 format consists of a single byte array containing the Y, U and V values. For an
    * image of size S, the first S positions of the array contain all the Y values. The remaining

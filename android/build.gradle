@@ -18,6 +18,10 @@ rootProject.allprojects {
     repositories {
         google()
         mavenCentral()
+        flatDir {
+            //dirs 'libs'
+            dirs project(':tnexekyc').file('libs')
+        }
     }
 }
 
@@ -65,6 +69,9 @@ dependencies {
     implementation 'com.google.guava:guava:27.1-android'
     implementation 'com.otaliastudios.opengl:egloo:0.6.1'
     implementation 'com.otaliastudios:transcoder:0.10.4'
+
+    implementation (name:"engine",ext:"aar")
+
 
     // Face features
     implementation 'com.google.mlkit:face-detection:16.1.5'
