@@ -109,12 +109,12 @@ class TnexekycPlugin: FlutterPlugin, MethodCallHandler, ActivityAware, EkycListe
       cameraFactory = CameraFactory(binding.activity, this@TnexekycPlugin)
       flutterPluginBinding
         .platformViewRegistry
-        .registerViewFactory("plugins.tnex.ekyc/camera", cameraFactory)
+        .registerViewFactory("plugins.tnex.ekyc/camera", cameraFactory!!)
     }
 
     if(captureFactory == null) {
       captureFactory = CaptureFactory(binding.activity, this@TnexekycPlugin)
-      flutterPluginBinding.platformViewRegistry.registerViewFactory("plugins.tnex.capture/camera", captureFactory)
+      flutterPluginBinding.platformViewRegistry.registerViewFactory("plugins.tnex.capture/camera", captureFactory!!)
     }
 
 //    cameraFactory?.onStartEkyc() ?: run {
