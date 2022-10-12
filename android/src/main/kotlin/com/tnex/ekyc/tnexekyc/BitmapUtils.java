@@ -25,6 +25,7 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.BitmapRegionDecoder;
 import android.graphics.ImageFormat;
 import android.graphics.Matrix;
 import android.graphics.Rect;
@@ -42,6 +43,7 @@ import android.renderscript.ScriptIntrinsicYuvToRGB;
 import android.renderscript.Type;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.camera.core.ExperimentalGetImage;
@@ -140,62 +142,6 @@ public class BitmapUtils {
         index ++;
       }
     }
-  }
-
-
-  public static byte[] rotateNV21_working(final ByteBuffer data,
-                                          final int width,
-                                          final int height,
-                                          final int rotation)
-  {
-    data.rewind();
-    byte[] yuv = new byte[data.limit()];
-    data.get(yuv, 0, yuv.length);
-
-    if (rotation == 0) return yuv;
-    if (rotation % 90 != 0 || rotation < 0 || rotation > 270) {
-      throw new IllegalArgumentException("0 <= rotation < 360, rotation % 90 == 0");
-    }
-
-    final byte[]  output    = new byte[yuv.length];
-    final int     frameSize = width * height;
-    final boolean swap      = rotation % 180 != 0;
-    final boolean xflip     = rotation % 270 != 0;
-    final boolean yflip     = rotation >= 180;
-
-    for (int j = 0; j < height; j++) {
-      for (int i = 0; i < width; i++) {
-        final int yIn = j * width + i;
-        final int uIn = frameSize + (j >> 1) * width + (i & ~1);
-        final int vIn = uIn       + 1;
-
-        final int wOut     = swap  ? height              : width;
-        final int hOut     = swap  ? width               : height;
-        final int iSwapped = swap  ? j                   : i;
-        final int jSwapped = swap  ? i                   : j;
-        final int iOut     = xflip ? wOut - iSwapped - 1 : iSwapped;
-        final int jOut     = yflip ? hOut - jSwapped - 1 : jSwapped;
-
-        final int yOut = jOut * wOut + iOut;
-        final int uOut = frameSize + (jOut >> 1) * wOut + (iOut & ~1);
-        final int vOut = uOut + 1;
-
-        output[yOut] = (byte)(0xff & yuv[yIn]);
-        output[uOut] = (byte)(0xff & yuv[uIn]);
-        output[vOut] = (byte)(0xff & yuv[vIn]);
-      }
-    }
-    return output;
-  }
-
-
-  @Nullable
-  public static byte[] getYUV420(ByteBuffer data, FrameMetadata metadata) {
-    Bitmap bitmap = getBitmap(data, metadata);
-    if(bitmap == null){
-      return null;
-    }
-    return getNV21(bitmap);
   }
 
   /** Converts a YUV_420_888 image from CameraX API to a bitmap. */
@@ -355,6 +301,44 @@ public class BitmapUtils {
     return ByteBuffer.wrap(out);
   }
 
+  @RequiresApi(VERSION_CODES.KITKAT)
+  public static ByteBuffer yuv420ThreePlanesToNV21(byte[] out) {
+    return ByteBuffer.wrap(out);
+  }
+
+  @RequiresApi(VERSION_CODES.KITKAT)
+  public static byte[] yuv420ThreePlanesToNV211(
+          Plane[] yuv420888planes, int width, int height) {
+    int imageSize = width * height;
+    byte[] out = new byte[imageSize + 2 * (imageSize / 4)];
+
+    if (areUVPlanesNV21(yuv420888planes, width, height)) {
+      // Copy the Y values.
+      Log.e(TAG, "areUVPlanesNV21(yuv420888planes, width, height)");
+
+      yuv420888planes[0].getBuffer().get(out, 0, imageSize);
+
+      ByteBuffer uBuffer = yuv420888planes[1].getBuffer();
+      ByteBuffer vBuffer = yuv420888planes[2].getBuffer();
+      // Get the first V value from the V buffer, since the U buffer does not contain it.
+      vBuffer.get(out, imageSize, 1);
+      // Copy the first U value and the remaining VU values from the U buffer.
+      uBuffer.get(out, imageSize + 1, 2 * imageSize / 4 - 1);
+    } else {
+      Log.e(TAG, "else areUVPlanesNV21(yuv420888planes, width, height)");
+
+      // Fallback to copying the UV values one by one, which is slower but also works.
+      // Unpack Y.
+      unpackPlane(yuv420888planes[0], width, height, out, 0, 1);
+      // Unpack U.
+      unpackPlane(yuv420888planes[1], width, height, out, imageSize + 1, 2);
+      // Unpack V.
+      unpackPlane(yuv420888planes[2], width, height, out, imageSize, 2);
+    }
+
+    return out;
+  }
+
   /** Checks if the UV plane buffers of a YUV_420_888 image are in the NV21 format. */
   @RequiresApi(VERSION_CODES.KITKAT)
   private static boolean areUVPlanesNV21(Plane[] planes, int width, int height) {
@@ -416,5 +400,80 @@ public class BitmapUtils {
       }
       rowStart += plane.getRowStride();
     }
+  }
+
+  public static byte[] rotateYUV420Degree90(byte[] data, int imageWidth, int imageHeight) {
+    byte[] yuv = new byte[imageWidth * imageHeight * 3 / 2];
+    // Rotate the Y luma
+    int i = 0;
+    for (int x = 0; x < imageWidth; x++) {
+      for (int y = imageHeight - 1; y >= 0; y--) {
+        yuv[i] = data[y * imageWidth + x];
+        i++;
+      }
+    }
+    // Rotate the U and V color components
+    i = imageWidth * imageHeight * 3 / 2 - 1;
+    for (int x = imageWidth - 1; x > 0; x = x - 2) {
+      for (int y = 0; y < imageHeight / 2; y++) {
+        yuv[i] = data[(imageWidth * imageHeight) + (y * imageWidth) + x];
+        i--;
+        yuv[i] = data[(imageWidth * imageHeight) + (y * imageWidth)
+                + (x - 1)];
+        i--;
+      }
+    }
+    return yuv;
+  }
+
+  private static byte[] rotateYUV420Degree180(byte[] data, int imageWidth, int imageHeight) {
+    byte[] yuv = new byte[imageWidth * imageHeight * 3 / 2];
+    int i = 0;
+    int count = 0;
+    for (i = imageWidth * imageHeight - 1; i >= 0; i--) {
+      yuv[count] = data[i];
+      count++;
+    }
+    i = imageWidth * imageHeight * 3 / 2 - 1;
+    for (i = imageWidth * imageHeight * 3 / 2 - 1; i >= imageWidth
+            * imageHeight; i -= 2) {
+      yuv[count++] = data[i - 1];
+      yuv[count++] = data[i];
+    }
+    return yuv;
+  }
+
+  public static byte[] rotateYUV420Degree270(byte[] data, int imageWidth,
+                                             int imageHeight) {
+    byte[] yuv = new byte[imageWidth * imageHeight * 3 / 2];
+    int nWidth = 0, nHeight = 0;
+    int wh = 0;
+    int uvHeight = 0;
+    if (imageWidth != nWidth || imageHeight != nHeight) {
+      nWidth = imageWidth;
+      nHeight = imageHeight;
+      wh = imageWidth * imageHeight;
+      uvHeight = imageHeight >> 1;// uvHeight = height / 2
+    }
+    // ??Y
+    int k = 0;
+    for (int i = 0; i < imageWidth; i++) {
+      int nPos = 0;
+      for (int j = 0; j < imageHeight; j++) {
+        yuv[k] = data[nPos + i];
+        k++;
+        nPos += imageWidth;
+      }
+    }
+    for (int i = 0; i < imageWidth; i += 2) {
+      int nPos = wh;
+      for (int j = 0; j < uvHeight; j++) {
+        yuv[k] = data[nPos + i];
+        yuv[k + 1] = data[nPos + i + 1];
+        k += 2;
+        nPos += imageWidth;
+      }
+    }
+    return rotateYUV420Degree180(yuv, imageWidth, imageHeight);
   }
 }

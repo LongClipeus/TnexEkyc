@@ -10,7 +10,9 @@ import android.util.AttributeSet
 import android.util.Log
 import androidx.constraintlayout.widget.ConstraintLayout
 import android.util.TypedValue
+import android.view.Surface
 import android.widget.Toast
+import androidx.annotation.NonNull
 import androidx.camera.core.*
 import androidx.camera.core.ImageAnalysis.OUTPUT_IMAGE_FORMAT_YUV_420_888
 import androidx.camera.lifecycle.ProcessCameraProvider
@@ -20,8 +22,10 @@ import androidx.core.util.Consumer
 import androidx.lifecycle.*
 import androidx.lifecycle.Observer
 import com.google.mlkit.common.MlKitException
+import com.google.mlkit.vision.common.InputImage
 import java.io.ByteArrayOutputStream
 import java.io.File
+import java.nio.ByteBuffer
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import kotlin.collections.ArrayList
@@ -164,6 +168,7 @@ class CameraConstraintLayout(context: Context,
             try {
                 val faceDetectorOptions = PreferenceUtils.getFaceDetectorOptions(context)
                 val listDetectionType = getListDetectType()
+                Log.i("engineWrapper", "BienNT liveness init FaceDetectorProcessor")
                 Log.i("FaceDetectorProcessor", "FaceDetectorProcessor layoutParams height = $viewHeight width = $viewWidth")
                 context?.let { FaceDetectorProcessor(it, faceDetectorOptions, listDetectionType, this, viewHeight, viewWidth, activity.assets) }
             } catch (e: Exception) {
@@ -184,7 +189,10 @@ class CameraConstraintLayout(context: Context,
                 builder.setTargetResolution(targetResolution)
             }
 
+
             analysisUseCase = builder.build()
+
+            analysisUseCase!!.targetRotation = Surface.ROTATION_0
 
             needUpdateGraphicOverlayImageSourceInfo = true
 
@@ -226,7 +234,7 @@ class CameraConstraintLayout(context: Context,
 
     @SuppressLint("UnsafeOptInUsageError")
     private fun proxyImageProcess1(imageProxy: ImageProxy){
-        Log.i("BienNT = ", "imageProxy.imageInfo.rotationDegrees = " + imageProxy.imageInfo.rotationDegrees)
+//        Log.i("BienNT = ", "BienNT liveness .rotationDegrees = " + imageProxy.imageInfo.rotationDegrees)
         val frameMetadata = FrameMetadata.Builder()
             .setWidth(imageProxy.width)
             .setHeight(imageProxy.height)
@@ -239,15 +247,13 @@ class CameraConstraintLayout(context: Context,
             imageProxy.height
         )
 
-        val bitmap: Bitmap? = BitmapUtils.getBitmap(nv21Buffer, frameMetadata)
-        //val yuv420: ByteArray? = BitmapUtils.getYUV420(nv21Buffer, frameMetadata)
-        val yuv420: ByteArray? = BitmapUtils.rotateNV21_working(nv21Buffer, imageProxy.width, imageProxy.height, imageProxy.imageInfo.rotationDegrees)
 
+        val bitmap: Bitmap? = BitmapUtils.getBitmap(nv21Buffer, frameMetadata)
         imageProxy.close()
         imageProcessor!!.drawImageBitmap(bitmap, graphicImage)
 
         try {
-            imageProcessor!!.processByteBuffer(nv21Buffer, frameMetadata, graphicOverlay, yuv420)
+            imageProcessor!!.processByteBuffer(nv21Buffer, frameMetadata, graphicOverlay)
             Log.i("FaceDetectorProcessor", "imageProcessor")
         } catch (e: MlKitException) {
             Log.i("FaceDetectorProcessor", "Failed to process image. Error: " + e.localizedMessage)

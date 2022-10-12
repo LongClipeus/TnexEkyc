@@ -70,7 +70,7 @@ dependencies {
     implementation 'com.otaliastudios.opengl:egloo:0.6.1'
     implementation 'com.otaliastudios:transcoder:0.10.4'
 
-    implementation (name:"engine",ext:"aar")
+    implementation (name:"engine2",ext:"aar")
 
 
     // Face features
