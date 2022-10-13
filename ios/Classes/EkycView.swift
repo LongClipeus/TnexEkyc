@@ -528,7 +528,7 @@ extension EkycView {
             let live = liveness.detectLive(from: imageData)
             print("BienNTHaHa live =  \(live)")
 
-            if(live == 0.0 || live >= 0.9){
+            if(live == 0.0 || live >= 0.6){
                 return true
             }else{
                 return false
