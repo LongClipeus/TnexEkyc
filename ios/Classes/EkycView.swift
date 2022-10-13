@@ -102,7 +102,7 @@ class EkycView: UIView {
         }
     }
     
-    private func detectFacesOnDevice(in image: VisionImage, width: CGFloat, height: CGFloat, photoData: PhotoData) {
+    private func detectFacesOnDevice(in image: VisionImage, width: CGFloat, height: CGFloat, photoData: PhotoData, sampleBuffer: CVImageBuffer?) {
         // When performing latency tests to determine ideal detection settings, run the app in 'release'
         // mode to get accurate performance metrics.
         let options = FaceDetectorOptions()
@@ -159,7 +159,7 @@ class EkycView: UIView {
                     }
                 }
             }
-            strongSelf.detect(faces: facesDetect, photoData: photoData)
+            strongSelf.detect(faces: facesDetect, photoData: photoData, sampleBuffer: sampleBuffer)
         }
     }
     
@@ -334,10 +334,15 @@ class EkycView: UIView {
         }
         let orientation: UIImage.Orientation = isUsingFrontCamera ? .leftMirrored : .right
         let image = UIConstants.createNewUIImage(from: newImageBuffer, orientation: orientation, width: frame.width, height: frame.height)
-        
-        print("BienNT updatePreviewOverlayViewWithImageBuffer image = \(String(describing: image))")
-
         previewOverlayView.image = image
+//        if let imageDetect = image{
+//            let live = liveness.detectLive(from: imageDetect)
+//            if(live != 0 && live < 0.9){
+//                self.sendCallback(detectionEvent: DetectionEvent.LOST_FACE, imagePath: nil, videoPath: nil)
+//                self.clearDetectData()
+//            }
+//        }
+        
     }
     
     private func normalizedPoint(
@@ -382,7 +387,7 @@ extension EkycView: AVCaptureVideoDataOutputSampleBufferDelegate {
         // photo
         photoData.updateData(data: imageBuffer, orientation: orientation, width: imageWidth, height: imageHeight)
         
-        detectFacesOnDevice(in: visionImage, width: imageWidth, height: imageHeight, photoData: photoData)
+        detectFacesOnDevice(in: visionImage, width: imageWidth, height: imageHeight, photoData: photoData, sampleBuffer: imageBuffer)
         // video
         captureVideo(output, didOutput: sampleBuffer, from: connection)
     }
@@ -522,24 +527,25 @@ extension EkycView {
         imageData.removeAll()
       }
     
-    private func checkLiveness(photoData: PhotoData) -> Bool{
-        guard let data = photoData.getData(), let orientation = photoData.getOrientation()  else { return true}
-        if let imageData = UIConstants.createUIImage(from: data, orientation: orientation) {
-            let live = liveness.detectLive(from: imageData)
-            print("BienNTHaHa live =  \(live)")
-
-            if(live == 0.0 || live >= 0.6){
-                return true
-            }else{
+    private func checkLiveness(_ imageBuffer: CVImageBuffer?) -> Bool{
+        guard let newImageBuffer = imageBuffer else {
+            print("BienNT updatePreviewOverlayViewWithImageBuffer imageBuffer nil")
+            return true
+        }
+        let orientation: UIImage.Orientation = isUsingFrontCamera ? .leftMirrored : .right
+        let image = UIConstants.createNewUIImage(from: newImageBuffer, orientation: orientation, width: frame.width, height: frame.height)
+        previewOverlayView.image = image
+        if let imageDetect = image{
+            let live = liveness.detectLive(from: imageDetect)
+            if(live != 0 && live < 0.9){
                 return false
             }
-            
         }
         
         return true
     }
     
-    private func detect(faces: [FaceData], photoData: PhotoData){
+    private func detect(faces: [FaceData], photoData: PhotoData, sampleBuffer: CVImageBuffer?){
         if(isPauseDetect || isStopDetection){
             return
         }
@@ -551,10 +557,9 @@ extension EkycView {
             self.clearDetectData()
         }else{
             let face = faces[0].getFace()
-            let faceRect = faces[0].getFaceRect()
             print("BienNT Log Detect face \(face)")
-            let isLiveness = checkLiveness(photoData: photoData)
             
+            let isLiveness = checkLiveness(sampleBuffer);
             if(isLiveness){
                 if(!isStart){
                     isStart = true
@@ -600,6 +605,7 @@ extension EkycView {
                 self.sendCallback(detectionEvent: DetectionEvent.LOST_FACE, imagePath: nil, videoPath: nil)
                 self.clearDetectData()
             }
+            
         }
     }
     
