@@ -45,7 +45,7 @@ class EngineWrapper(private var assetManager: AssetManager) {
 
     fun detect(bitmap: Bitmap): Float {
         val boxes = detectFace(bitmap)
-        if (boxes.isNotEmpty() && boxes.size == 1) {
+        if (boxes != null && boxes.size == 1) {
             return detectLive(bitmap, boxes[0])
         }
 

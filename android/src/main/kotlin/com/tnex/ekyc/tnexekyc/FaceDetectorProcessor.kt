@@ -198,7 +198,11 @@ class FaceDetectorProcessor(context: Context, detectorOptions: FaceDetectorOptio
 
         Log.i("engineWrapper", "BienNT liveness = $liveness")
 
-        onFace(face, graphicOverlay, originalCameraImage)
+        if(liveness != null && liveness != 0.0f && liveness < 0.9f){
+          onLostFace()
+        }else{
+          onFace(face, graphicOverlay, originalCameraImage)
+        }
       }
     }
   }
@@ -255,6 +259,11 @@ class FaceDetectorProcessor(context: Context, detectorOptions: FaceDetectorOptio
         clearDetectData()
       }
     }
+  }
+
+  private fun onLostFace(){
+    listener.onResults(DetectionEvent.LOST_FACE, null)
+    clearDetectData()
   }
 
   private fun onMultipleFace(faces: List<Face>, graphicOverlay: GraphicOverlay){

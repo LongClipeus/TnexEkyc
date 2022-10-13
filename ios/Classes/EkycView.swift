@@ -528,7 +528,7 @@ extension EkycView {
             let live = liveness.detectLive(from: imageData)
             print("BienNTHaHa live =  \(live)")
 
-            if(live >= 0.7){
+            if(live == 0.0 || live >= 0.9){
                 return true
             }else{
                 return false
@@ -553,46 +553,52 @@ extension EkycView {
             let face = faces[0].getFace()
             let faceRect = faces[0].getFaceRect()
             print("BienNT Log Detect face \(face)")
-            checkLiveness(photoData: photoData)
-            if(!isStart){
-                isStart = true
-                startRecordVideo()
-            }
+            let isLiveness = checkLiveness(photoData: photoData)
             
-            
-            let headEulerAngleY  = face.headEulerAngleY
-            if(headEulerAngleY < 16 && headEulerAngleY > -16){
-                listSmiling.append(Float(face.smilingProbability))
-            }
-            
-            listDataDetect = addDataDetectionType(face: face, currData: listDataDetect, detectionType: currDetectionType)
-            print("BienNT Log Detect face \(listDataDetect)")
-            let isDetectionType = validateDetectionType()
-            print("BienNT Log Detect face \(isDetectionType)")
-            if(isDetectionType){
-                if(currIndexDetectionType < listDetectType.count - 1){
-                    takePhoto(mediaType: currDetectionType.getMediaType(), photoData: photoData)
-                    isPauseDetect = true
-                    listDataDetect.removeAll()
-                    currIndexDetectionType += 1
-                    currDetectionType=listDetectType[currIndexDetectionType]
-                    sendChangeDetectType(detectType: currDetectionType.rawValue)
-                    startDetectTimeout()
-                    delayDetect()
-                }else{
-                    takePhoto(mediaType: currDetectionType.getMediaType(), photoData: photoData)
-                    
-//                    let smiling = getAmplitude(listCheck: listSmiling)
-//                    if(smiling <= 0.2){
-//                        self.sendCallback(detectionEvent: DetectionEvent.LOST_FACE, imagePath: nil, videoPath: nil)
-//                    }else{
-                        let videoPath = getVideoPath()
-                        let imagePath = getListImagePath()
-                        self.sendCallback(detectionEvent: DetectionEvent.SUCCESS, imagePath: imagePath, videoPath: videoPath)
-//                    }
-                    
-                    self.clearDetectData()
+            if(isLiveness){
+                if(!isStart){
+                    isStart = true
+                    startRecordVideo()
                 }
+                
+                
+                let headEulerAngleY  = face.headEulerAngleY
+                if(headEulerAngleY < 16 && headEulerAngleY > -16){
+                    listSmiling.append(Float(face.smilingProbability))
+                }
+                
+                listDataDetect = addDataDetectionType(face: face, currData: listDataDetect, detectionType: currDetectionType)
+                print("BienNT Log Detect face \(listDataDetect)")
+                let isDetectionType = validateDetectionType()
+                print("BienNT Log Detect face \(isDetectionType)")
+                if(isDetectionType){
+                    if(currIndexDetectionType < listDetectType.count - 1){
+                        takePhoto(mediaType: currDetectionType.getMediaType(), photoData: photoData)
+                        isPauseDetect = true
+                        listDataDetect.removeAll()
+                        currIndexDetectionType += 1
+                        currDetectionType=listDetectType[currIndexDetectionType]
+                        sendChangeDetectType(detectType: currDetectionType.rawValue)
+                        startDetectTimeout()
+                        delayDetect()
+                    }else{
+                        takePhoto(mediaType: currDetectionType.getMediaType(), photoData: photoData)
+                        
+    //                    let smiling = getAmplitude(listCheck: listSmiling)
+    //                    if(smiling <= 0.2){
+    //                        self.sendCallback(detectionEvent: DetectionEvent.LOST_FACE, imagePath: nil, videoPath: nil)
+    //                    }else{
+                            let videoPath = getVideoPath()
+                            let imagePath = getListImagePath()
+                            self.sendCallback(detectionEvent: DetectionEvent.SUCCESS, imagePath: imagePath, videoPath: videoPath)
+    //                    }
+                        
+                        self.clearDetectData()
+                    }
+                }
+            }else{
+                self.sendCallback(detectionEvent: DetectionEvent.LOST_FACE, imagePath: nil, videoPath: nil)
+                self.clearDetectData()
             }
         }
     }
