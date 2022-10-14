@@ -534,9 +534,15 @@ extension EkycView {
         }
         let orientation: UIImage.Orientation = isUsingFrontCamera ? .leftMirrored : .right
         let image = UIConstants.createNewUIImage(from: newImageBuffer, orientation: orientation, width: frame.width, height: frame.height)
-        previewOverlayView.image = image
         if let imageDetect = image{
             let live = liveness.detectLive(from: imageDetect)
+//            let live1 = liveness.detectLive(fromImage3: imageDetect)
+//            let live2 = liveness.detectLive(fromImage2: imageDetect)
+
+            print("BienNT isLiveness = \(live)")
+//            print("BienNT isLiveness = \(live1)")
+//            print("BienNT isLiveness = \(live2)")
+
             if(live != 0 && live < 0.9){
                 return false
             }
@@ -560,6 +566,7 @@ extension EkycView {
             print("BienNT Log Detect face \(face)")
             
             let isLiveness = checkLiveness(sampleBuffer);
+
             if(isLiveness){
                 if(!isStart){
                     isStart = true
