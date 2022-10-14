@@ -16,6 +16,8 @@ A new flutter plugin project.
   s.source_files = 'Classes/**/*'
   s.dependency 'Flutter' 
   s.dependency 'MLKitVision'
+  s.ios.preserve_paths = 'LivenessDetection.xcframework/**/*'
+  s.ios.xcconfig = { 'OTHER_LDFLAGS' => '-framework LivenessDetection' }
   s.ios.vendored_frameworks = 'LivenessDetection.xcframework'
   s.dependency 'GoogleMLKit/FaceDetection', '~> 2.6.0'
   s.static_framework = true
