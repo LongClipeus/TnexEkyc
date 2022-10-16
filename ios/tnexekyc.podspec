@@ -3,9 +3,6 @@
 # Run `pod lib lint tnexekyc.podspec` to validate before publishing.
 #
 
-# s.ios.preserve_paths = 'LivenessDetection.xcframework/**/*'
-# s.ios.xcconfig = { 'OTHER_LDFLAGS' => '-framework LivenessDetection' }
-
 Pod::Spec.new do |s|
   s.name             = 'tnexekyc'
   s.version          = '0.0.2'
