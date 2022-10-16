@@ -15,6 +15,22 @@ import LivenessDetection
 
 //let epsilon = 80
 
+struct MFaceBox: Codable {
+    let x1: Float
+    let x2: Float
+    let y1: Float
+    let y2: Float
+
+
+    private enum CodingKeys: String, CodingKey {
+        case x1 = "x1"
+        case x2 = "x2"
+        case y1 = "y1"
+        case y2 = "y2"
+    }
+}
+
+
 class EkycView: UIView {
     private var currIndexDetectionType : Int = 0
     private var currDetectionType : DetectionType = DetectionType.SMILE
@@ -30,6 +46,7 @@ class EkycView: UIView {
     private var changeDetectType:((String) -> ())? = nil
     private var isStopDetection: Bool = true
     private var liveness = LiveInterface()
+    private var totalFake = 0
     
     
     private var isUsingFrontCamera = true
@@ -115,6 +132,7 @@ class EkycView: UIView {
         var faces: [Face]
         do {
             faces = try faceDetector.results(in: image)
+            print("BienNT Log Detect face = \(faces)")
         } catch _ {
             self.updatePreviewOverlayViewWithLastFrame()
             self.sendCallback(detectionEvent: DetectionEvent.FAILED, imagePath: nil, videoPath: nil)
@@ -130,36 +148,77 @@ class EkycView: UIView {
                 self.clearDetectData()
                 return
             }
+            
+            if(faces.isEmpty){
+                
+            }
+            else if(faces.count > 1){
+                self.sendCallback(detectionEvent: DetectionEvent.MULTIPLE_FACE, imagePath: nil, videoPath: nil)
+                self.clearDetectData()
+            }
+            else{
+                if let newImageBuffer = sampleBuffer {
+                    let orientation: UIImage.Orientation = isUsingFrontCamera ? .leftMirrored : .right
+                    let image = UIConstants.createNewUIImage(from: newImageBuffer, orientation: orientation, width: frame.width, height: frame.height)
+                    if let imageDetect = image {
+                        let abc = liveness.getFace(imageDetect);
+                        if let data = abc.data(using: .utf8) {
+                            do {
+                                let f = try JSONDecoder().decode(MFaceBox.self, from: data)
+                                
+                                
+                                print("BienNT Face = \(f)")
+//                                    let eW = width - previewLayer.frame.width
+                                let eH = height - previewLayer.frame.height
+                                let standardizedRect1 = CGRect(
+                                    x: (CGFloat(f.x1) + 30) / width,
+                                    y: (CGFloat(f.y1) - 10 ) / height,
+                                    width: (CGFloat(f.x2 - f.x1) + eH) / width,
+                                    height: CGFloat(f.y2 - f.y1) / height)
+                                
+                                
+                                let standardizedRect = strongSelf.previewLayer.layerRectConverted(
+                                    fromMetadataOutputRect: standardizedRect1
+                                ).standardized
+                                
+                                
+                                let h = standardizedRect.origin.y + standardizedRect.size.height
+                                let w = standardizedRect.origin.x + standardizedRect.size.width
+                                
+                                if(standardizedRect.origin.y >= 20 && standardizedRect.origin.x >= 20 && h < frame.height - 20 && w < frame.width - 20){
+                                    
+                                    let live = liveness.detectLive(imageDetect, x1: Float(f.x1), y1: Float(f.y1), x2: Float(f.x2), y2: Float(f.y2))
+                                    
+                                    print("BienNT Face liveness= \(live)")
 
-            let eW = width - self.frame.size.width
-            var facesDetect : [FaceData] = []
-            for face in faces {
-                if(face.hasTrackingID){
-                    let normalizedRect = CGRect(
-                        x: (face.frame.origin.x + eW ) / width,
-                        y: face.frame.origin.y / height,
-                        width: face.frame.size.width  / width,
-                        height: face.frame.size.height / height
-                    )
-                    let standardizedRect = strongSelf.previewLayer.layerRectConverted(
-                        fromMetadataOutputRect: normalizedRect
-                    ).standardized
-                    
-                    let h = standardizedRect.origin.y + standardizedRect.size.height
-                    let w = standardizedRect.origin.x + standardizedRect.size.width
-
-                    if(standardizedRect.origin.y >= 0 && standardizedRect.origin.x >= 0 && h < frame.height && w < frame.width){
-                        let faceData = FaceData(face: face, faceRect: standardizedRect)
-                        facesDetect.append(faceData)
-                        UIConstants.addRectangle(
-                            standardizedRect,
-                            to: strongSelf.annotationOverlayView,
-                            color: UIColor.white
-                        )
+                                    
+                                    if(live != 0 && live < 0.95){
+                                        totalFake += 1
+                                        if(totalFake >= 3){
+                                            self.sendCallback(detectionEvent: DetectionEvent.NO_FACE, imagePath: nil, videoPath: nil)
+                                            self.clearDetectData()
+                                        }
+                                    }else{
+                                        UIConstants.addRectangle(
+                                            standardizedRect,
+                                            to: strongSelf.annotationOverlayView,
+                                            color: UIColor.white
+                                        )
+                                        
+                                        
+                                        let faceData = FaceData(face: faces[0], faceRect: standardizedRect)
+                                        strongSelf.detect(faceData:faceData, photoData: photoData, sampleBuffer: sampleBuffer)
+                                    }
+                                }
+                            } catch {
+//                                print("BienNT Face =  \(error)")
+                            }
+                            
+                        }
                     }
+                    
                 }
             }
-            strongSelf.detect(faces: facesDetect, photoData: photoData, sampleBuffer: sampleBuffer)
         }
     }
     
@@ -271,9 +330,6 @@ class EkycView: UIView {
         NSLayoutConstraint.activate([
             previewOverlayView.centerXAnchor.constraint(equalTo: centerXAnchor),
             previewOverlayView.centerYAnchor.constraint(equalTo: centerYAnchor),
-            previewOverlayView.leadingAnchor.constraint(equalTo: leadingAnchor),
-            previewOverlayView.trailingAnchor.constraint(equalTo: trailingAnchor),
-            
         ])
     }
     
@@ -335,14 +391,6 @@ class EkycView: UIView {
         let orientation: UIImage.Orientation = isUsingFrontCamera ? .leftMirrored : .right
         let image = UIConstants.createNewUIImage(from: newImageBuffer, orientation: orientation, width: frame.width, height: frame.height)
         previewOverlayView.image = image
-//        if let imageDetect = image{
-//            let live = liveness.detectLive(from: imageDetect)
-//            if(live != 0 && live < 0.9){
-//                self.sendCallback(detectionEvent: DetectionEvent.LOST_FACE, imagePath: nil, videoPath: nil)
-//                self.clearDetectData()
-//            }
-//        }
-        
     }
     
     private func normalizedPoint(
@@ -525,95 +573,70 @@ extension EkycView {
         isPauseDetect = true
         listDataDetect.removeAll()
         imageData.removeAll()
+        totalFake = 0;
       }
     
-    private func checkLiveness(_ imageBuffer: CVImageBuffer?) -> Bool{
-        guard let newImageBuffer = imageBuffer else {
-            print("BienNT updatePreviewOverlayViewWithImageBuffer imageBuffer nil")
-            return true
-        }
-        let orientation: UIImage.Orientation = isUsingFrontCamera ? .leftMirrored : .right
-        let image = UIConstants.createNewUIImage(from: newImageBuffer, orientation: orientation, width: frame.width, height: frame.height)
-        if let imageDetect = image{
-            let live = liveness.detectLive(from: imageDetect)
-//            let live1 = liveness.detectLive(fromImage3: imageDetect)
-//            let live2 = liveness.detectLive(fromImage2: imageDetect)
-
-            print("BienNT isLiveness = \(live)")
-//            print("BienNT isLiveness = \(live1)")
-//            print("BienNT isLiveness = \(live2)")
-
-            if(live != 0 && live < 0.9){
-                return false
+    func convertStringToDictionary(text: String) -> [String:Float]? {
+        if let data = text.data(using: .utf8) {
+            do {
+                let json = try JSONSerialization.jsonObject(with: data, options: .mutableContainers) as? [String:Float]
+                return json
+            } catch {
+                print("Something went wrong")
             }
         }
-        
-        return true
+        return nil
     }
     
-    private func detect(faces: [FaceData], photoData: PhotoData, sampleBuffer: CVImageBuffer?){
+    private func detect(faceData: FaceData, photoData: PhotoData, sampleBuffer: CVImageBuffer?){
+
         if(isPauseDetect || isStopDetection){
             return
         }
         
-        if(faces.isEmpty){
-            
-        }else if(faces.count > 1){
-            self.sendCallback(detectionEvent: DetectionEvent.MULTIPLE_FACE, imagePath: nil, videoPath: nil)
-            self.clearDetectData()
-        }else{
-            let face = faces[0].getFace()
+            let face = faceData.getFace()
             print("BienNT Log Detect face \(face)")
-            
-            let isLiveness = checkLiveness(sampleBuffer);
-
-            if(isLiveness){
-                if(!isStart){
-                    isStart = true
-                    startRecordVideo()
-                }
-                
-                
-                let headEulerAngleY  = face.headEulerAngleY
-                if(headEulerAngleY < 16 && headEulerAngleY > -16){
-                    listSmiling.append(Float(face.smilingProbability))
-                }
-                
-                listDataDetect = addDataDetectionType(face: face, currData: listDataDetect, detectionType: currDetectionType)
-                print("BienNT Log Detect face \(listDataDetect)")
-                let isDetectionType = validateDetectionType()
-                print("BienNT Log Detect face \(isDetectionType)")
-                if(isDetectionType){
-                    if(currIndexDetectionType < listDetectType.count - 1){
-                        takePhoto(mediaType: currDetectionType.getMediaType(), photoData: photoData)
-                        isPauseDetect = true
-                        listDataDetect.removeAll()
-                        currIndexDetectionType += 1
-                        currDetectionType=listDetectType[currIndexDetectionType]
-                        sendChangeDetectType(detectType: currDetectionType.rawValue)
-                        startDetectTimeout()
-                        delayDetect()
-                    }else{
-                        takePhoto(mediaType: currDetectionType.getMediaType(), photoData: photoData)
-                        
-    //                    let smiling = getAmplitude(listCheck: listSmiling)
-    //                    if(smiling <= 0.2){
-    //                        self.sendCallback(detectionEvent: DetectionEvent.LOST_FACE, imagePath: nil, videoPath: nil)
-    //                    }else{
-                            let videoPath = getVideoPath()
-                            let imagePath = getListImagePath()
-                            self.sendCallback(detectionEvent: DetectionEvent.SUCCESS, imagePath: imagePath, videoPath: videoPath)
-    //                    }
-                        
-                        self.clearDetectData()
-                    }
-                }
+        if(!isStart){
+            isStart = true
+            startRecordVideo()
+        }
+        
+        
+        let headEulerAngleY  = face.headEulerAngleY
+        if(headEulerAngleY < 16 && headEulerAngleY > -16){
+            listSmiling.append(Float(face.smilingProbability))
+        }
+        
+        listDataDetect = addDataDetectionType(face: face, currData: listDataDetect, detectionType: currDetectionType)
+        print("BienNT Log Detect face \(listDataDetect)")
+        let isDetectionType = validateDetectionType()
+        print("BienNT Log Detect face \(isDetectionType)")
+        if(isDetectionType){
+            if(currIndexDetectionType < listDetectType.count - 1){
+                takePhoto(mediaType: currDetectionType.getMediaType(), photoData: photoData)
+                isPauseDetect = true
+                listDataDetect.removeAll()
+                currIndexDetectionType += 1
+                currDetectionType=listDetectType[currIndexDetectionType]
+                sendChangeDetectType(detectType: currDetectionType.rawValue)
+                startDetectTimeout()
+                delayDetect()
             }else{
-                self.sendCallback(detectionEvent: DetectionEvent.LOST_FACE, imagePath: nil, videoPath: nil)
+                takePhoto(mediaType: currDetectionType.getMediaType(), photoData: photoData)
+                
+//                    let smiling = getAmplitude(listCheck: listSmiling)
+//                    if(smiling <= 0.2){
+//                        self.sendCallback(detectionEvent: DetectionEvent.LOST_FACE, imagePath: nil, videoPath: nil)
+//                    }else{
+                    let videoPath = getVideoPath()
+                    let imagePath = getListImagePath()
+                    self.sendCallback(detectionEvent: DetectionEvent.SUCCESS, imagePath: imagePath, videoPath: videoPath)
+//                    }
+                
                 self.clearDetectData()
             }
-            
         }
+            
     }
     
     
@@ -805,7 +828,7 @@ extension EkycView {
                 let newLeft = sortDEC(listData: l)
                 let newRight = sortDEC(listData: r)
                 
-                if(newLeft[0] > 0.6 && newLeft[newLeft.count - 1 ] < 0.2 && newRight[0] > 0.6 && newRight[newRight.count - 1] < 0.2){
+                if(newLeft[0] > 0.6 && newLeft[newLeft.count - 1 ] < 0.2 && newRight[0] > 0.7 && newRight[newRight.count - 1] < 0.2){
                     return true
                 }
 //            }

@@ -21,9 +21,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (float)detectLiveFromImage:(UIImage *)image;
 
-- (float)detectLiveFromImage2:(UIImage *)image;
+- (NSString *)getFace:(UIImage *)image;
 
-- (float)detectLiveFromImage3:(UIImage *)image;
+
 
 - (void)deallocate;
 

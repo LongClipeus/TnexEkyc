@@ -2,6 +2,10 @@
 # To learn more about a Podspec see http://guides.cocoapods.org/syntax/podspec.html.
 # Run `pod lib lint tnexekyc.podspec` to validate before publishing.
 #
+
+# s.ios.preserve_paths = 'LivenessDetection.xcframework/**/*'
+# s.ios.xcconfig = { 'OTHER_LDFLAGS' => '-framework LivenessDetection' }
+
 Pod::Spec.new do |s|
   s.name             = 'tnexekyc'
   s.version          = '0.0.2'
@@ -16,8 +20,6 @@ A new flutter plugin project.
   s.source_files = 'Classes/**/*'
   s.dependency 'Flutter' 
   s.dependency 'MLKitVision'
-  s.ios.preserve_paths = 'LivenessDetection.xcframework/**/*'
-  s.ios.xcconfig = { 'OTHER_LDFLAGS' => '-framework LivenessDetection' }
   s.ios.vendored_frameworks = 'LivenessDetection.xcframework'
   s.dependency 'GoogleMLKit/FaceDetection', '~> 2.6.0'
   s.static_framework = true
