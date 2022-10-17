@@ -11,7 +11,6 @@ import MLImage
 import MLKitVision
 import MLKitFaceDetection
 import AVKit
-import LivenessDetection
 
 //let epsilon = 80
 
@@ -192,9 +191,9 @@ class EkycView: UIView {
                                     print("BienNT Face liveness= \(live)")
 
                                     
-                                    if(live != 0 && live < 0.95){
+                                    if(live != 0 && live < 0.9){
                                         totalFake += 1
-                                        if(totalFake >= 3){
+                                        if(totalFake >= 5){
                                             self.sendCallback(detectionEvent: DetectionEvent.NO_FACE, imagePath: nil, videoPath: nil)
                                             self.clearDetectData()
                                         }

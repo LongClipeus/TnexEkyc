@@ -1,6 +1,0 @@
-framework module LivenessDetection {
-  umbrella header "LivenessDetection.h"
-
-  export *
-  module * { export * }
-}

@@ -7,7 +7,7 @@
 
 #import <Foundation/Foundation.h>
 
-#import "LivenessDetection/LiveInterface.h"
+#import "LiveInterface.h"
 
 //! Project version number for LivenessDetection.
 FOUNDATION_EXPORT double LivenessDetectionVersionNumber;
