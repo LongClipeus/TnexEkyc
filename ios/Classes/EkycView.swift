@@ -148,10 +148,17 @@ class EkycView: UIView {
                 return
             }
             
-            if(faces.isEmpty){
+            var facesDetect : [Face] = []
+            for face in faces {
+                if(face.hasTrackingID){
+                    facesDetect.append(face)
+                }
+            }
+
+            if(facesDetect.isEmpty){
                 
             }
-            else if(faces.count > 1){
+            else if(facesDetect.count > 1){
                 self.sendCallback(detectionEvent: DetectionEvent.MULTIPLE_FACE, imagePath: nil, videoPath: nil)
                 self.clearDetectData()
             }
@@ -159,7 +166,13 @@ class EkycView: UIView {
                 if let newImageBuffer = sampleBuffer {
                     let orientation: UIImage.Orientation = isUsingFrontCamera ? .leftMirrored : .right
                     let image = UIConstants.createNewUIImage(from: newImageBuffer, orientation: orientation, width: frame.width, height: frame.height)
+                    
+                    
                     if let imageDetect = image {
+//                        let imgShow = liveness.getNewUIImage(imageDetect)
+//                        showImage(uiImage: imgShow)
+//                        return
+                        
                         let abc = liveness.getFace(imageDetect);
                         if let data = abc.data(using: .utf8) {
                             do {
@@ -167,14 +180,24 @@ class EkycView: UIView {
                                 
                                 
                                 print("BienNT Face = \(f)")
+                                print("BienNT Face = HIHIHAHA \(imageDetect.size.height)")
+                                print("BienNT Face = HIHIHAHA \(frame.height)")
 //                                    let eW = width - previewLayer.frame.width
-                                let eH = height - previewLayer.frame.height
-                                let standardizedRect1 = CGRect(
-                                    x: (CGFloat(f.x1) + 30) / width,
-                                    y: (CGFloat(f.y1) - 10 ) / height,
-                                    width: (CGFloat(f.x2 - f.x1) + eH) / width,
-                                    height: CGFloat(f.y2 - f.y1) / height)
+                                let eH = (imageDetect.size.height - frame.height)/2
+                                let offH = (imageDetect.size.width - frame.width)/2
+//                                let standardizedRect1 = CGRect(
+//                                    x: CGFloat(f.y1) / height,
+//                                    y: (CGFloat(f.x1) + offH) / width,
+//                                    width: CGFloat(f.y2 - f.y1) / height,
+//                                    height: (CGFloat(f.x2 - f.x1) + eH) / width
+//                                )
                                 
+                                let standardizedRect1 = CGRect(
+                                    x: (CGFloat(f.y1) + 10) / height,
+                                    y: (CGFloat(f.x1) + offH) / width,
+                                    width: (CGFloat(f.y2 - f.y1) + 0) / height,
+                                    height: (CGFloat(f.x2 - f.x1) + eH) / width
+                                )
                                 
                                 let standardizedRect = strongSelf.previewLayer.layerRectConverted(
                                     fromMetadataOutputRect: standardizedRect1
@@ -184,7 +207,15 @@ class EkycView: UIView {
                                 let h = standardizedRect.origin.y + standardizedRect.size.height
                                 let w = standardizedRect.origin.x + standardizedRect.size.width
                                 
-                                if(standardizedRect.origin.y >= 20 && standardizedRect.origin.x >= 20 && h < frame.height - 20 && w < frame.width - 20){
+                                let off = CGFloat(10);
+//                                print("BienNT Face = off \(off)")
+//                                print("BienNT Face = standardizedRect \(standardizedRect)")
+//                                print("BienNT Face = standardizedRect.origin.y \(standardizedRect.origin.y)")
+//                                print("BienNT Face = standardizedRect.origin.x \(standardizedRect.origin.x)")
+//                                print("BienNT Face = h \(h)")
+//                                print("BienNT Face = w \(w)")
+
+                                if(standardizedRect.origin.y >= off && standardizedRect.origin.x >= off && h < frame.height - off && w < frame.width - off){
                                     
                                     let live = liveness.detectLive(imageDetect, x1: Float(f.x1), y1: Float(f.y1), x2: Float(f.x2), y2: Float(f.y2))
                                     
@@ -193,9 +224,15 @@ class EkycView: UIView {
                                     
                                     if(live != 0 && live < 0.9){
                                         totalFake += 1
-                                        if(totalFake >= 5){
+                                        if(totalFake >= 3){
                                             self.sendCallback(detectionEvent: DetectionEvent.NO_FACE, imagePath: nil, videoPath: nil)
                                             self.clearDetectData()
+                                        }else{
+                                            UIConstants.addRectangle(
+                                                standardizedRect,
+                                                to: strongSelf.annotationOverlayView,
+                                                color: UIColor.white
+                                            )
                                         }
                                     }else{
                                         UIConstants.addRectangle(
@@ -204,8 +241,7 @@ class EkycView: UIView {
                                             color: UIColor.white
                                         )
                                         
-                                        
-                                        let faceData = FaceData(face: faces[0], faceRect: standardizedRect)
+                                        let faceData = FaceData(face: facesDetect[0], faceRect: standardizedRect)
                                         strongSelf.detect(faceData:faceData, photoData: photoData, sampleBuffer: sampleBuffer)
                                     }
                                 }
@@ -1119,6 +1155,21 @@ extension EkycView {
 
 // MARK: - Record video and take photo
 extension EkycView {
+    private func showImage(uiImage: UIImage){
+        let alert = UIAlertController(title: "Title", message: "Message", preferredStyle: .alert)
+            let action = UIAlertAction(title: "OK", style: .cancel, handler: nil)
+
+            //Add imageview to alert
+            let imgViewTitle = UIImageView(frame: CGRect(x: 10, y: 10, width: 200, height: 200))
+            imgViewTitle.image = uiImage
+            alert.view.addSubview(imgViewTitle)
+
+            alert.addAction(action)
+        if let topController = UIApplication.topViewController() {
+            topController.present(alert, animated: true, completion: nil)
+        }
+    }
+    
     private func playVideo() {
         guard let videoURL = getOutputUrlIfFileExists(mediaType: .video) else {return}
         let player = AVPlayer(url: videoURL)

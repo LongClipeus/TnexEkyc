@@ -17,6 +17,7 @@ A new flutter plugin project.
   s.source_files = 'Classes/**/*'
   s.dependency 'Flutter' 
   s.dependency 'MLKitVision'
+  s.project_header_files = 'Classes/LivenessDetection/definition.h', 'Classes/LivenessDetection/FaceDetector.h', 'Classes/LivenessDetection/Live.h'
   s.ios.frameworks = 'CoreGraphics'
   s.ios.vendored_frameworks = 'framework/ncnn.framework', 'framework/opencv2.framework', 'framework/openmp.framework'
   s.dependency 'GoogleMLKit/FaceDetection', '~> 2.6.0'

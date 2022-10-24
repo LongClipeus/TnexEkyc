@@ -176,29 +176,52 @@ public class UIConstants {
             from: imageBuffer,
             orientation: orientation
         ){
+            print("BienNT Face = crop")
+
             let w = uiImage.size.width
             let h = uiImage.size.height
             
-            var newW = w
-            var newH = (height/width)*w
-            var x = 0.0
-            var y = 0.0
+            print("BienNT Face = crop uiImage.size.width \(uiImage.size.width) uiImage.size.height \(uiImage.size.height)")
+
+            
+            var newW = width
+            var newH = (h/w)*newW
+            
+            print("BienNT Face = crop newW \(newW) newH \(newH)")
+
             
             if(newH > h){
-                newH = h
-                newW = (width/height)*h + 20
-                x = CGFloat((newW - width) / 2) + newH - newW
-            }else{
-                newH += 20
-                y = CGFloat((newH - height) / 2) + newW - newH
+                newH = height
+                newW = (w/h)*newH
             }
             
+            let x = CGFloat((newW - width) / 2)
+            let y = CGFloat((newH - height) / 2)
+            
+            
+//            var newW = w
+//            var newH = (height/width)*w
+//            var x = 0.0
+//            var y = 0.0
+//
+//            if(newH > h){
+//                newH = h
+//                newW = (width/height)*h + 20
+//                x = CGFloat((newW - width) / 2) + newH - newW
+//            }else{
+//                newH += 20
+//                y = CGFloat((newH - height) / 2) + newW - newH
+//            }
+//
             let cropRect = CGRect(
                 x: y,
                 y: x,
                 width: newH,
                 height: newW
             ).integral
+            
+            print("BienNT Face = crop newH \(newH) newW \(newW)")
+
 
             guard let sourceCGImage = uiImage.cgImage else { return nil }
             
@@ -213,8 +236,12 @@ public class UIConstants {
                 orientation: uiImage.imageOrientation
             )
             
+            print("BienNT Face = crop croppedImage width \(croppedImage.size.width)")
+            print("BienNT Face = crop croppedImage height \(croppedImage.size.height)")
+            
             return croppedImage
         }else{
+            print("BienNT Face = no crop")
             return createUIImage(
                 from : imageBuffer,
                 orientation: orientation,

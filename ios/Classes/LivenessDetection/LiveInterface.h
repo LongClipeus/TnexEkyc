@@ -23,6 +23,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (NSString *)getFace:(UIImage *)image;
 
+- (UIImage *)getNewUIImage:(UIImage *)image;
+
 
 
 - (void)deallocate;

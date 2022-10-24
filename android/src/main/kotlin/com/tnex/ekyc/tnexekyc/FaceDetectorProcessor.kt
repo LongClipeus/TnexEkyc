@@ -89,6 +89,7 @@ class FaceDetectorProcessor(context: Context, detectorOptions: FaceDetectorOptio
   private val detector: FaceDetector
   private val timeoutDetectionTime: Long = 30000
   private var isStart: Boolean = false
+  private var totalFake: Int = 0
   private var isPauseDetect: Boolean = true
   private var listSmiling = arrayListOf<Float>()
   private val mHandler: Handler = Handler(Looper.getMainLooper())
@@ -171,7 +172,13 @@ class FaceDetectorProcessor(context: Context, detectorOptions: FaceDetectorOptio
         val right = x + scale(face.boundingBox.width() / 2.0f, graphicOverlay)
         val bottom = y + scale(face.boundingBox.height() / 2.0f, graphicOverlay)
 
-        if(left >= 0 && top >= 0 && right <= currViewWidth && bottom <= currViewHeight){
+//        val off = currViewWidth / 8
+
+        val off = 20
+        Log.i(TAG, "BienNTOFF $off")
+
+
+        if(left >= off && top >= off && right <= currViewWidth - off && bottom <= currViewHeight - off){
           faceDetect.add(face)
         }
       }
@@ -199,7 +206,12 @@ class FaceDetectorProcessor(context: Context, detectorOptions: FaceDetectorOptio
         Log.i("engineWrapper", "BienNT liveness = $liveness")
 
         if(liveness != null && liveness != 0.0f && liveness < 0.9f){
-          onLostFace()
+          totalFake ++;
+          if(totalFake >= 3){
+            onLostFace()
+          }else{
+            onFace(face, graphicOverlay, originalCameraImage)
+          }
         }else{
           onFace(face, graphicOverlay, originalCameraImage)
         }
@@ -213,6 +225,7 @@ class FaceDetectorProcessor(context: Context, detectorOptions: FaceDetectorOptio
     imageData.clear()
     isStart = false
     listDataDetect.clear()
+    totalFake = 0;
   }
 
   private fun onFace(face:Face, graphicOverlay: GraphicOverlay, originalCameraImage: Bitmap?){
@@ -262,7 +275,7 @@ class FaceDetectorProcessor(context: Context, detectorOptions: FaceDetectorOptio
   }
 
   private fun onLostFace(){
-    listener.onResults(DetectionEvent.LOST_FACE, null)
+    listener.onResults(DetectionEvent.NO_FACE, null)
     clearDetectData()
   }
 
