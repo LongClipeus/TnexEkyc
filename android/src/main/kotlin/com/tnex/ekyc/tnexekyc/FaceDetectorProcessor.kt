@@ -172,6 +172,7 @@ class FaceDetectorProcessor(context: Context, detectorOptions: FaceDetectorOptio
         val right = x + scale(face.boundingBox.width() / 2.0f, graphicOverlay)
         val bottom = y + scale(face.boundingBox.height() / 2.0f, graphicOverlay)
 
+
 //        val off = currViewWidth / 8
 
         val off = 20
